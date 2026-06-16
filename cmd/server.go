@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
 
 	"github.com/osugodbless/groupie-tracker/internal/config"
 )
 
+var templates = template.Must(template.ParseFiles("templates/index.html"))
+
 func main() {
 	artistsData := config.LoadConfig()
-	fmt.Println("Config Data loaded successfully")
-	fmt.Println(artistsData)
 
 }
