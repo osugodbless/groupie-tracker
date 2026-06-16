@@ -7,6 +7,8 @@ import (
 )
 
 func main() {
-	config.LoadConfig()
+	artistsData := config.LoadConfig()
 	fmt.Println("Config Data loaded successfully")
+	fmt.Println(artistsData)
+
 }

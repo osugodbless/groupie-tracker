@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -19,60 +18,44 @@ var client = &http.Client{
 	Timeout:   15 * time.Second, // Still advisable to set an overall timeout
 }
 
-var appData Data
+var CompleteArtistsData []Artist
 
-func LoadConfigHelper(endpointName, endpointUrl string) {
-	endpointName = strings.ToLower(endpointName)
+func LoadConfig() []Artist {
+	var artists []Artist
+	var relations RelationIndex
+
+	LoadConfigHelper("https://groupietrackers.herokuapp.com/api/artists", &artists)
+	fmt.Printf("Loaded %d Artists\n", len(artists))
+
+	LoadConfigHelper("https://groupietrackers.herokuapp.com/api/relation", &relations)
+	fmt.Printf("Loaded %d Relation profiles\n", len(relations.Index))
+
+	relationMap := make(map[int]map[string][]string)
+	for _, rel := range relations.Index {
+		relationMap[rel.ID] = rel.DatesLocation
+	}
+
+	CompleteArtistsData = make([]Artist, len(artists))
+	for i, art := range artists {
+		CompleteArtistsData[i] = art
+		CompleteArtistsData[i].DatesLocation = relationMap[art.ID]
+	}
+
+	return CompleteArtistsData
+}
+
+func LoadConfigHelper(endpointUrl string, target any) {
 
 	resp, err := client.Get(endpointUrl)
 	if err != nil {
-		log.Fatalf("Error fetching %v: %v", endpointName, err)
+		log.Fatalf("Error fetching data: %v", err)
 	}
 	defer resp.Body.Close()
 
-	switch endpointName {
-
-	// Decode Artists
-	case "artists":
-		err = json.NewDecoder(resp.Body).Decode(&appData.Artists)
-
-	// Decode Locations
-	case "locations":
-		var locationIndex LocationIndex
-		err = json.NewDecoder(resp.Body).Decode(&locationIndex)
-		appData.Locations = locationIndex.Index
-
-	// Decode Dates
-	case "dates":
-		var dateIndex DateIndex
-		err = json.NewDecoder(resp.Body).Decode(&dateIndex)
-		appData.Dates = dateIndex.Index
-
-	// Decode Relations
-	case "relations":
-		var relationIndex RelationIndex
-		err = json.NewDecoder(resp.Body).Decode(&relationIndex)
-		appData.Relations = relationIndex.Index
-
-	}
-
+	err = json.NewDecoder(resp.Body).Decode(target)
 	// Check for error
 	if err != nil {
-		log.Fatalf("Error decoding %v: %v", endpointName, err)
+		log.Fatalf("Error decoding data: %v", err)
 	}
 
-}
-
-func LoadConfig() {
-	LoadConfigHelper("artists", "https://groupietrackers.herokuapp.com/api/artists")
-	fmt.Printf("Loaded %d Artists\n", len(appData.Artists))
-
-	LoadConfigHelper("locations", "https://groupietrackers.herokuapp.com/api/locations")
-	fmt.Printf("Loaded %d Location profiles\n", len(appData.Locations))
-
-	LoadConfigHelper("dates", "https://groupietrackers.herokuapp.com/api/dates")
-	fmt.Printf("Loaded %d Date profiles\n", len(appData.Dates))
-
-	LoadConfigHelper("relations", "https://groupietrackers.herokuapp.com/api/relation")
-	fmt.Printf("Loaded %d Relation profiles\n", len(appData.Relations))
 }
