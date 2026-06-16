@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -15,33 +14,33 @@ var transport = &http.Transport{
 
 var client = &http.Client{
 	Transport: transport,
-	Timeout:   15 * time.Second, // Still advisable to set an overall timeout
+	Timeout:   15 * time.Second, // Overall timeout
 }
 
-var CompleteArtistsData []Artist
+var CompleteBandData []Artist
 
 func LoadConfig() []Artist {
 	var artists []Artist
 	var relations RelationIndex
 
+	// Get requests to external api
 	LoadConfigHelper("https://groupietrackers.herokuapp.com/api/artists", &artists)
-	fmt.Printf("Loaded %d Artists\n", len(artists))
-
 	LoadConfigHelper("https://groupietrackers.herokuapp.com/api/relation", &relations)
-	fmt.Printf("Loaded %d Relation profiles\n", len(relations.Index))
 
+	// Extract band concert info for easy merging with band personal info
 	relationMap := make(map[int]map[string][]string)
 	for _, rel := range relations.Index {
 		relationMap[rel.ID] = rel.DatesLocation
 	}
 
-	CompleteArtistsData = make([]Artist, len(artists))
+	// Merge band information with their concert dates together
+	CompleteBandData = make([]Artist, len(artists)) // Allocate enough space to hold the complete band data
 	for i, art := range artists {
-		CompleteArtistsData[i] = art
-		CompleteArtistsData[i].DatesLocation = relationMap[art.ID]
+		CompleteBandData[i] = art
+		CompleteBandData[i].DatesLocation = relationMap[art.ID]
 	}
 
-	return CompleteArtistsData
+	return CompleteBandData
 }
 
 func LoadConfigHelper(endpointUrl string, target any) {
