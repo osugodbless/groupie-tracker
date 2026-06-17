@@ -19,7 +19,7 @@ var client = &http.Client{
 
 var CompleteBandData []Artist
 
-func LoadConfig() []Artist {
+func LoadConfig() {
 	var artists []Artist
 	var relations RelationIndex
 
@@ -40,7 +40,7 @@ func LoadConfig() []Artist {
 		CompleteBandData[i].DatesLocation = relationMap[art.ID]
 	}
 
-	return CompleteBandData
+	// return CompleteBandData
 }
 
 func LoadConfigHelper(endpointUrl string, target any) {
