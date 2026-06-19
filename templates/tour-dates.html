@@ -1,0 +1,53 @@
+<div>
+    <div>
+        <img src="{{ .Image }}" alt="Band Image">
+        <div>
+            <span></span>
+            <a href="/">Back to Artists</a>
+
+            <div>
+                <h2>{{ .Name }}</h2>
+                <div>
+                    <span></span>
+                    <p>Est. {{ .CreationYear }}</p>
+                </div>
+
+                <div>
+                    <span></span>
+                    <p>First Album: {{ .FirstAlbum }}</p>
+                </div>
+
+                <div>
+                    <span></span>
+                    <h5>Members</h5>
+                    <div>
+                        {{ range .Members }}
+                        <div>
+                            {{ . }}
+                        </div>
+                        {{ end }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div>
+        <span></span>
+        <h3>Concert Dates & Locations</h3>
+
+        <div>
+            {{ range $k, $v := .DatesLocation }}
+            {{ range $v }}
+            <div>
+                <span></span>
+                {{ $k }}
+                {{ . }}
+            </div>
+            {{ end }}
+            {{ end }}
+        </div>
+    </div>
+
+</div>

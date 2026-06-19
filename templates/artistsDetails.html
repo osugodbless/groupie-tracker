@@ -1,0 +1,41 @@
+<div id="artistDetails">
+    <div>
+        <span></span>
+        <h4>{{ .Name }}</h4>
+        <img src="{{ .Image }}" alt="Band Image">
+    </div>
+
+    <div>
+        <div>
+            <span></span>
+            <p>Founded</p>
+            <p>{{ .CreationYear }}</p>
+        </div>
+
+        <div>
+            <span></span>
+            <p>First Album</p>
+            <p>{{ .FirstAlbum }}</p>
+        </div>
+    </div>
+
+    <div>
+        <span></span>
+        <h5>Members</h5>
+        <div>
+            {{ range .Members }}
+            <div>
+                {{ . }}
+            </div>
+            {{ end }}
+        </div>
+    </div>
+
+    <button
+        hx-get="/artist/{{ .ID }}/tour-data"
+        hx-target="#artistDetails"
+        hx-swap="outerHTML"
+    >View Full Analytics
+    </button>
+    
+</div>

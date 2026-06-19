@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Groupie Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js" integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V" crossorigin="anonymous"></script>
 </head>
 <body>
-    <div>
+    <div id="index">
         <div>
             <div>
                 <span></span>
@@ -38,7 +39,11 @@
             <h2>Featured Artists</h2>
             <div>
                 {{ range . }}
-                    <div id="{{ .ID }}">
+                    <div id="{{ .ID }}"
+                        hx-get="/artist/{{ .ID }}"
+                        hx-target="#index"
+                        hx-swap="outerHTML"
+                    >
                         <img src="{{ .Image }}" alt="Band Image">
                         <div>
                             <h4>{{ .Name }}</h4>
