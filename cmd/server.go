@@ -12,12 +12,18 @@ import (
 	"github.com/osugodbless/groupie-tracker/internal/routes"
 )
 
-var tmpl = template.Must(template.ParseFiles("templates/index.html"))
+var funcMap = template.FuncMap{
+	"add": func(x, y int) int {
+		return x + y
+	},
+}
+
+var tmpl = template.Must(template.New("main").Funcs(funcMap).ParseFiles("templates/index.html"))
 
 func main() {
 
 	app := &handlers.Application{
-		Templates: tmpl,
+		Template: tmpl,
 	}
 
 	config.LoadConfig()
@@ -31,7 +37,6 @@ func main() {
 		Handler:      mux,
 	}
 
-	fmt.Printf("Server is running on %s", server.Addr)
+	fmt.Printf("Server started on %v", server.Addr)
 	log.Fatal(server.ListenAndServe())
-
 }

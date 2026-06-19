@@ -3,9 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Groupie Tracker</title>
 </head>
 <body>
-    <h1>TEST</h1>
+    <div>
+        <div>
+            <div>
+                <span></span>
+                <h1>Band Artists Hub</h1>
+            </div>
+            <p>Explore comprehensive data visualizations and insights for your favorite artists. Click on any artist card to discover their story through data.</p>
+        </div>
+
+        <div>
+            <div>
+                <h3>{{ len . }}</h3>
+                <p>Artists</p>
+            </div>
+            <div>
+                {{ $totalLength := 0 }}
+                {{ range . }}
+                {{ $length := len .DatesLocation }}
+                {{ $totalLength = add $totalLength $length}}
+                {{ end }}
+                <h3>
+                    {{ $totalLength }}
+                </h3>
+                <p>Concert Dates</p>
+            </div>
+        </div>
+
+        <div>
+            <span></span>
+            <h2>Featured Artists</h2>
+            <div>
+                {{ range . }}
+                    <div id="{{ .ID }}">
+                        <img src="{{ .Image }}" alt="Band Image">
+                        <div>
+                            <h4>{{ .Name }}</h4>
+                            <span></span>
+                            <p>{{ .CreationYear }}</p>
+                        </div>
+                    </div>
+                {{ else }}
+                    <h2>No artists found.</h2>
+                {{ end }}
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,3 +1,6 @@
+dev:
+	air
+
 run:
 	go run cmd/server.go
 

@@ -14,10 +14,10 @@ var transport = &http.Transport{
 
 var client = &http.Client{
 	Transport: transport,
-	Timeout:   15 * time.Second, // Overall timeout
+	Timeout:   15 * time.Second, // Still advisable to set an overall timeout
 }
 
-var CompleteBandData []Artist
+var CompleteArtistsData []Artist
 
 func LoadConfig() {
 	var artists []Artist
@@ -34,13 +34,13 @@ func LoadConfig() {
 	}
 
 	// Merge band information with their concert dates together
-	CompleteBandData = make([]Artist, len(artists)) // Allocate enough space to hold the complete band data
+	CompleteArtistsData = make([]Artist, len(artists)) // Allocate enough space to hold the complete band data
 	for i, art := range artists {
-		CompleteBandData[i] = art
-		CompleteBandData[i].DatesLocation = relationMap[art.ID]
+		CompleteArtistsData[i] = art
+		CompleteArtistsData[i].DatesLocation = relationMap[art.ID]
 	}
 
-	// return CompleteBandData
+	// return CompleteArtistsData
 }
 
 func LoadConfigHelper(endpointUrl string, target any) {
