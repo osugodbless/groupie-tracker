@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -17,30 +18,41 @@ var client = &http.Client{
 	Timeout:   15 * time.Second, // Still advisable to set an overall timeout
 }
 
-var CompleteArtistsData []Artist
+var ArtistByID map[int]Artist
 
 func LoadConfig() {
 	var artists []Artist
 	var relations RelationIndex
 
-	// Get requests to external api
-	LoadConfigHelper("https://groupietrackers.herokuapp.com/api/artists", &artists)
-	LoadConfigHelper("https://groupietrackers.herokuapp.com/api/relation", &relations)
+	// Get requests to external api concurrently
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-	// Extract band concert info for easy merging with band personal info
+	go func() {
+		defer wg.Done()
+		LoadConfigHelper("https://groupietrackers.herokuapp.com/api/artists", &artists)
+	}()
+
+	go func() {
+		defer wg.Done()
+		LoadConfigHelper("https://groupietrackers.herokuapp.com/api/relation", &relations)
+	}()
+
+	wg.Wait()
+
+	// Extract artist concert info for easy merging with band personal info
 	relationMap := make(map[int]map[string][]string)
 	for _, rel := range relations.Index {
 		relationMap[rel.ID] = rel.DatesLocation
 	}
 
-	// Merge band information with their concert dates together
-	CompleteArtistsData = make([]Artist, len(artists)) // Allocate enough space to hold the complete band data
-	for i, art := range artists {
-		CompleteArtistsData[i] = art
-		CompleteArtistsData[i].DatesLocation = relationMap[art.ID]
-	}
+	// Merge artist information with their concert dates together
+	ArtistByID = make(map[int]Artist, len(artists))
 
-	// return CompleteArtistsData
+	for _, art := range artists {
+		art.DatesLocation = relationMap[art.ID]
+		ArtistByID[art.ID] = art
+	}
 }
 
 func LoadConfigHelper(endpointUrl string, target any) {

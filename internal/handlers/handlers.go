@@ -25,7 +25,7 @@ func (app *Application) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	renderTemplate(w, app, "index", config.CompleteArtistsData)
+	renderTemplate(w, app, "index", config.ArtistByID)
 }
 
 func (app *Application) ArtistHandler(w http.ResponseWriter, r *http.Request) {
@@ -79,10 +79,9 @@ func (app *Application) TourDatesHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func getArtistByID(id int) (config.Artist, error) {
-	for _, artist := range config.CompleteArtistsData {
-		if id == artist.ID {
-			return artist, nil
-		}
+	artist, ok := config.ArtistByID[id]
+	if ok {
+		return artist, nil
 	}
 	return config.Artist{}, errors.New("Artist not found")
 }
