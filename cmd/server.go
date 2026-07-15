@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/osugodbless/groupie-tracker/internal/config"
@@ -15,6 +16,10 @@ import (
 var funcMap = template.FuncMap{
 	"add": func(x, y int) int {
 		return x + y
+	},
+	"clean": func(s string) string {
+		result := strings.ReplaceAll(s, "-", ", ")
+		return strings.ReplaceAll(result, "_", " ")
 	},
 }
 
