@@ -10,22 +10,35 @@ import (
 )
 
 type Application struct {
-	Template *template.Template
+	BaseTemplate *template.Template
 }
 
-func renderTemplate(w http.ResponseWriter, app *Application, tmpl string, data any) {
-	err := app.Template.ExecuteTemplate(w, tmpl+".html", data)
+func renderTemplate(w http.ResponseWriter, app *Application, contentFile string, data any) {
+	// tmpl, err := app.BaseTemplate.Clone()
+	// if err != nil {
+	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// tmpl, err = tmpl.ParseFiles("templates/" + contentFile)
+	// if err != nil {
+	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	err := app.BaseTemplate.ExecuteTemplate(w, contentFile, data)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 }
+
 func (app *Application) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	renderTemplate(w, app, "index", config.ArtistByID)
+	renderTemplate(w, app, "base.html", config.ArtistByID)
 }
 
 func (app *Application) ArtistHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +63,7 @@ func (app *Application) ArtistHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	renderTemplate(w, app, "artistsDetails", artist)
+	renderTemplate(w, app, "artistsDetails.html", artist)
 }
 
 func (app *Application) TourDatesHandler(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +88,7 @@ func (app *Application) TourDatesHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	renderTemplate(w, app, "tour-dates", artist)
+	renderTemplate(w, app, "tour-dates.html", artist)
 }
 
 func getArtistByID(id int) (config.Artist, error) {

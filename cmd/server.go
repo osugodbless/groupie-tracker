@@ -23,12 +23,12 @@ var funcMap = template.FuncMap{
 	},
 }
 
-var tmpl = template.Must(template.New("main").Funcs(funcMap).ParseFiles("templates/index.html", "templates/artistsDetails.html", "templates/tour-dates.html"))
+var baseTmpl = template.Must(template.New("base").Funcs(funcMap).ParseFiles("templates/base.html", "templates/index.html", "templates/artistsDetails.html", "templates/tour-dates.html"))
 
 func main() {
 
 	app := &handlers.Application{
-		Template: tmpl,
+		BaseTemplate: baseTmpl,
 	}
 
 	config.LoadConfig()

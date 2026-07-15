@@ -1,67 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Groupie Tracker</title>
-    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js" integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V" crossorigin="anonymous"></script>
-</head>
-<body>
-    <div id="index">
-        <div>
-            <div>
-                <span></span>
-                <h1>Band Artists Hub</h1>
-            </div>
-            <p>Explore comprehensive data visualizations and insights for your favorite artists. Click on any artist card to discover their story through data.</p>
+{{define "content"}}
+<div id="index" class="space-y-12">
+    <!-- Hero Section -->
+    <div class="text-center space-y-4">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-neon-cyan/10 rounded-full border border-neon-cyan/20">
+            <span class="text-neon-cyan">🎶</span>
+            <span class="text-neon-cyan text-sm font-medium">Discover Music</span>
         </div>
-
-        <div>
-            <div>
-                <h3>{{ len . }}</h3>
-                <p>Artists</p>
-            </div>
-            <div>
-                {{ $totalLength := 0 }}
-                {{ range . }}
-                {{ $length := len .DatesLocation }}
-                {{ $totalLength = add $totalLength $length}}
-                {{ end }}
-                <h3>
-                    {{ $totalLength }}
-                </h3>
-                <p>Concert Dates</p>
-            </div>
-        </div>
-
-        <div>
-            <span></span>
-            <h2>Featured Artists</h2>
-            <div>
-                {{ range . }}
-                    <div id="{{ .ID }}"
-                        hx-get="/artist/{{ .ID }}"
-                        hx-target="#index"
-                        hx-swap="outerHTML"
-                    >
-                        <img src="{{ .Image }}" alt="Band Image">
-                        <div>
-                            <h4>{{ .Name }}</h4>
-                            <span></span>
-                            <p>{{ .CreationYear }}</p>
-                        </div>
-                    </div>
-                {{ else }}
-                    <h2>No artists found.</h2>
-                {{ end }}
-            </div>
-        </div>
-
-        {{define "footer"}}
-        <footer> &copy; 2026 Godbless </footer>
-        {{end}}
-
-        {{template "footer" .}}
+        <h1 class="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent">
+            Band Artists Hub
+        </h1>
+        <p class="text-gray-400 max-w-2xl mx-auto text-lg">
+            Explore comprehensive data visualizations and insights for your favorite artists. Click on any artist card to discover their story through data.
+        </p>
     </div>
-</body>
-</html>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
+        <div class="bg-gray-900/50 border border-gray-800 rounded-xl p-6 text-center">
+            <h3 class="font-heading text-3xl font-bold text-neon-cyan">{{ len . }}</h3>
+            <p class="text-gray-400 text-sm mt-1">Artists</p>
+        </div>
+        <div class="bg-gray-900/50 border border-gray-800 rounded-xl p-6 text-center">
+            {{ $totalLength := 0 }}
+            {{ range . }}
+            {{ $length := len .DatesLocation }}
+            {{ $totalLength = add $totalLength $length}}
+            {{ end }}
+            <h3 class="font-heading text-3xl font-bold text-neon-purple">{{ $totalLength }}</h3>
+            <p class="text-gray-400 text-sm mt-1">Concert Dates</p>
+        </div>
+    </div>
+
+    <!-- Artist Grid -->
+    <div class="space-y-6">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">🎤</span>
+            <h2 class="font-heading text-2xl font-bold text-white">Featured Artists</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {{ range . }}
+            <div id="{{ .ID }}"
+                hx-get="/artist/{{ .ID }}"
+                hx-target="#index"
+                hx-swap="outerHTML"
+                hx-indicator="#loading-{{ .ID }}"
+                class="group bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden hover:border-neon-cyan/50 hover:shadow-lg hover:shadow-neon-cyan/10 transition-all duration-300 cursor-pointer">
+                <div class="relative aspect-square overflow-hidden">
+                    <img src="{{ .Image }}" alt="{{ .Name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    <div class="absolute inset-0 bg-gradient-to-t from-gray-950/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+                <div class="p-4">
+                    <h4 class="font-heading text-lg font-semibold text-white group-hover:text-neon-cyan transition-colors">{{ .Name }}</h4>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="w-2 h-2 bg-neon-purple rounded-full"></span>
+                        <p class="text-gray-400 text-sm">Est. {{ .CreationYear }}</p>
+                    </div>
+                </div>
+                <div id="loading-{{ .ID }}" class="hx-indicator">
+                    <div class="p-4 space-y-3">
+                        <div class="skeleton h-4 bg-gray-800 rounded w-3/4"></div>
+                        <div class="skeleton h-3 bg-gray-800 rounded w-1/2"></div>
+                    </div>
+                </div>
+            </div>
+            {{ else }}
+            <div class="col-span-full text-center py-12">
+                <p class="text-gray-400 text-lg">No artists found.</p>
+            </div>
+            {{ end }}
+        </div>
+    </div>
+</div>
+{{end}}
