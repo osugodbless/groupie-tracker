@@ -9,17 +9,17 @@
 
         <div class="relative">
             <!-- Timeline Line -->
-            <div class="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-neon-cyan via-neon-purple to-neon-pink"></div>
+            <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-neon-cyan via-neon-purple to-neon-pink"></div>
 
             <!-- Timeline Items -->
             <div class="space-y-8">
                 {{ range $k, $v := .DatesLocation }}
                 <div class="relative flex items-start gap-4 md:gap-8">
                     <!-- Timeline Dot -->
-                    <div class="absolute left-4 md:left-1/2 w-4 h-4 -ml-2 bg-neon-cyan rounded-full border-4 border-gray-950 z-10"></div>
+                    <div class="absolute left-4 w-4 h-4 -ml-2 bg-neon-cyan rounded-full border-4 border-gray-950 z-10"></div>
                     
                     <!-- Content -->
-                    <div class="ml-12 md:ml-0 md:w-1/2 md:pl-12 md:ml-auto">
+                    <div class="ml-12 md:ml-0 md:w-1/2 md:pl-12">
                         <div class="bg-gray-900/50 border border-gray-800 rounded-xl p-4 hover:border-neon-cyan/30 transition-colors">
                             <div class="flex items-center gap-2 mb-3">
                                 <span class="text-lg">📍</span>

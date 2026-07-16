@@ -28,7 +28,7 @@ var baseTmpl = template.Must(template.New("base").Funcs(funcMap).ParseFiles("tem
 func main() {
 
 	app := &handlers.Application{
-		BaseTemplate: baseTmpl,
+		Templates: baseTmpl,
 	}
 
 	config.LoadConfig()

@@ -10,23 +10,12 @@ import (
 )
 
 type Application struct {
-	BaseTemplate *template.Template
+	Templates *template.Template
 }
 
 func renderTemplate(w http.ResponseWriter, app *Application, contentFile string, data any) {
-	// tmpl, err := app.BaseTemplate.Clone()
-	// if err != nil {
-	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// 	return
-	// }
 
-	// tmpl, err = tmpl.ParseFiles("templates/" + contentFile)
-	// if err != nil {
-	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// 	return
-	// }
-
-	err := app.BaseTemplate.ExecuteTemplate(w, contentFile, data)
+	err := app.Templates.ExecuteTemplate(w, contentFile, data)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
