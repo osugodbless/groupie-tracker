@@ -5,22 +5,16 @@ import (
 	"log"
 	"net/http"
 	"sync"
-	"time"
 )
 
-var transport = &http.Transport{
-	ResponseHeaderTimeout: 5 * time.Second, // Time to wait for server's first response header
-	ExpectContinueTimeout: 1 * time.Second, // Time to wait for a response after sending an `Expect: 100-continue` header
-}
-
-var client = &http.Client{
-	Transport: transport,
-	Timeout:   15 * time.Second, // Still advisable to set an overall timeout
+type APIClient struct {
+	Client  *http.Client
+	BaseURL string
 }
 
 var ArtistByID map[int]Artist
 
-func LoadConfig() {
+func (api *APIClient) LoadConfig() {
 	var artists []Artist
 	var relations RelationIndex
 
@@ -30,12 +24,12 @@ func LoadConfig() {
 
 	go func() {
 		defer wg.Done()
-		LoadConfigHelper("https://groupietrackers.herokuapp.com/api/artists", &artists)
+		api.LoadConfigHelper(api.BaseURL+"/artists", &artists)
 	}()
 
 	go func() {
 		defer wg.Done()
-		LoadConfigHelper("https://groupietrackers.herokuapp.com/api/relation", &relations)
+		api.LoadConfigHelper(api.BaseURL+"/relation", &relations)
 	}()
 
 	wg.Wait()
@@ -55,9 +49,9 @@ func LoadConfig() {
 	}
 }
 
-func LoadConfigHelper(endpointUrl string, target any) {
+func (api *APIClient) LoadConfigHelper(endpointUrl string, target any) {
 
-	resp, err := client.Get(endpointUrl)
+	resp, err := api.Client.Get(endpointUrl)
 	if err != nil {
 		log.Fatalf("Error fetching data: %v", err)
 	}

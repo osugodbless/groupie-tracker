@@ -11,10 +11,35 @@ import (
 	"github.com/osugodbless/groupie-tracker/internal/routes"
 )
 
-func TestRoutes(t *testing.T) {
-	tmpl := template.Must(template.ParseFiles("../../testdata/base.html"))
+var firstMockArtist = config.Artist{
+	ID:   1,
+	Name: "Mock Artist",
+	DatesLocation: map[string][]string{
+		"2023-01-01": {"New York", "Los Angeles"},
+	},
+}
 
-	config.LoadConfig()
+var secondMockArtist = config.Artist{
+	ID:   7,
+	Name: "Mock Artist",
+	DatesLocation: map[string][]string{
+		"2023-01-01": {"New York", "Los Angeles"},
+	},
+}
+
+var testTemplate = `
+		{{define "base.html"}}<div>Base Template</div>{{end}}
+		{{define "artistsDetails.html"}}<div>Artist Details: {{.Name}}</div>{{end}}
+		{{define "tour-dates.html"}}<div>Tour Dates: {{.Name}}</div>{{end}}
+	`
+
+func TestRoutes(t *testing.T) {
+	tmpl := template.Must(template.New("test").Parse(testTemplate))
+
+	config.ArtistByID = map[int]config.Artist{
+		1: firstMockArtist,
+		7: secondMockArtist,
+	}
 
 	app := &handlers.Application{
 		Templates: tmpl,
@@ -28,10 +53,10 @@ func TestRoutes(t *testing.T) {
 		path   string
 		status int
 	}{
-		{"Test Home Page", "GET", "/", http.StatusOK},
-		{"Test Artist Page", "GET", "/artist/1", http.StatusOK},
-		{"Test Tour Dates Page", "GET", "/artist/1/tour-data", http.StatusOK},
-		{"Test Non-existent Artist", "GET", "/artist/9999", http.StatusNotFound},
+		{"Test Home Route", "GET", "/", http.StatusOK},
+		{"Test Artist Route", "GET", "/artist/1", http.StatusOK},
+		{"Test Tour Dates Route", "GET", "/artist/1/tour-data", http.StatusOK},
+		{"Test Non-existent Artist Route", "GET", "/artist/9999", http.StatusNotFound},
 	}
 
 	for _, test := range tests {
@@ -43,8 +68,8 @@ func TestRoutes(t *testing.T) {
 
 			res := w.Result()
 
-			if res.StatusCode != http.StatusOK {
-				t.Errorf("expected status OK; got %v", res.StatusCode)
+			if res.StatusCode != test.status {
+				t.Errorf("expected status %v; got %v", test.status, res.StatusCode)
 			}
 		})
 	}
