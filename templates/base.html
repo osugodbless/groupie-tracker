@@ -14,6 +14,11 @@
                         heading: ['Space Grotesk', 'sans-serif'],
                         body: ['DM Sans', 'sans-serif'],
                     },
+                    letterSpacing: {
+                        stat: '-0.03em',
+                        meta: '0.04em',
+                        body: '0.01em',
+                    },
                     colors: {
                         neon: {
                             cyan: '#22d3ee',
@@ -27,11 +32,24 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js" integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V" crossorigin="anonymous"></script>
     <style>
-        body { font-family: 'DM Sans', sans-serif; }
-        h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
+        body {
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 211, 238, 0.06), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 30%, rgba(168, 85, 247, 0.04), transparent),
+                radial-gradient(ellipse 50% 40% at 20% 60%, rgba(236, 72, 153, 0.04), transparent),
+                #030712;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(34, 211, 238, 0.4); }
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
         .hx-indicator { display: none; }
         .htmx-request .hx-indicator { display: block; }
         .htmx-request.htmx-settling .hx-indicator { display: none; }
@@ -40,53 +58,448 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        .card-glow { position: relative; }
+        .card-glow::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.3), rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.3));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+        .card-glow:hover::before { opacity: 1; }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slide-in-left {
+            from { opacity: 0; transform: translateX(-12px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes scale-in {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .hero-badge { animation: fade-up 0.4s ease-out both; }
+        .hero-title { animation: fade-up 0.5s ease-out 0.1s both; }
+        .hero-desc { animation: fade-up 0.5s ease-out 0.2s both; }
+        .hero-cta { animation: fade-up 0.4s ease-out 0.3s both; }
+
+        .card-animate {
+            animation: card-entrance 0.35s ease-out both;
+        }
+        @keyframes card-entrance {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .card-animate:nth-child(5n+1) { animation-delay: 0s; }
+        .card-animate:nth-child(5n+2) { animation-delay: 0.06s; }
+        .card-animate:nth-child(5n+3) { animation-delay: 0.12s; }
+        .card-animate:nth-child(5n+4) { animation-delay: 0.18s; }
+        .card-animate:nth-child(5n+5) { animation-delay: 0.24s; }
+
+        .page-entrance {
+            animation: scale-in 0.3s ease-out both;
+        }
+
+        .timeline-item {
+            animation: slide-in-left 0.4s ease-out both;
+        }
+        .timeline-item:nth-child(1) { animation-delay: 0s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.08s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.16s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.24s; }
+        .timeline-item:nth-child(5) { animation-delay: 0.32s; }
+        .timeline-item:nth-child(6) { animation-delay: 0.4s; }
+        .timeline-item:nth-child(7) { animation-delay: 0.48s; }
+        .timeline-item:nth-child(8) { animation-delay: 0.56s; }
+
+        .htmx-swapping { opacity: 0; transition: opacity 0.15s ease; }
+
+        .img-fallback {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(168, 85, 247, 0.08));
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        img.error + .img-fallback { display: flex; }
+        img.error { opacity: 0; position: absolute; }
+
+        .card-animate.visited { opacity: 0.5; filter: grayscale(0.4); }
+        .card-animate.visited::after {
+            content: '✓';
+            position: absolute;
+            top: 6px; right: 6px;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: rgba(34, 211, 238, 0.9);
+            color: #030712;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            z-index: 5;
+            line-height: 22px;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .measure-body { max-width: 65ch; }
+        .text-balance { text-wrap: balance; }
+        .member-tag:nth-child(3n+1):hover { color: #22d3ee; border-color: rgba(34, 211, 238, 0.3); }
+        .member-tag:nth-child(3n+2):hover { color: #a855f7; border-color: rgba(168, 85, 247, 0.3); }
+        .member-tag:nth-child(3n+3):hover { color: #ec4899; border-color: rgba(236, 72, 153, 0.3); }
+
+        .cassette {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 13px;
+            user-select: none;
+        }
+        .cassette-body {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            padding: 0.45em 0.6em;
+            background: linear-gradient(180deg, #1e293b, #0f172a);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 0.35em;
+        }
+        .cassette-reel {
+            width: 1.8em;
+            height: 1.8em;
+            border-radius: 50%;
+            border: 0.12em solid currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: cassette-spin 1.5s linear infinite;
+            will-change: transform;
+        }
+        .cassette-reel::before {
+            content: '';
+            position: absolute;
+            width: 62%;
+            height: 62%;
+            border-radius: 50%;
+            border: 0.08em solid currentColor;
+            opacity: 0.3;
+        }
+        .cassette-reel-l { color: rgba(34, 211, 238, 0.7); }
+        .cassette-reel-r {
+            color: rgba(168, 85, 247, 0.7);
+            animation-direction: reverse;
+        }
+        .cassette-hub {
+            width: 0.25em;
+            height: 0.25em;
+            border-radius: 50%;
+            background: currentColor;
+            z-index: 1;
+        }
+        .cassette-tape {
+            flex: 1;
+            min-width: 1.8em;
+            height: 0.35em;
+            position: relative;
+            background: rgba(255,255,255,0.03);
+            border-radius: 0.08em;
+            overflow: hidden;
+        }
+        .cassette-tape-stripe {
+            position: absolute;
+            top: 50%; left: 0; right: 0;
+            height: 0.12em;
+            transform: translateY(-50%);
+            background: linear-gradient(90deg, rgba(34, 211, 238, 0.4), rgba(168, 85, 247, 0.4));
+            animation: tape-slide 1.2s ease-in-out infinite;
+        }
+        @keyframes cassette-spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes tape-slide {
+            0% { transform: translateY(-50%) scaleX(0.3); opacity: 0.2; }
+            50% { transform: translateY(-50%) scaleX(1); opacity: 0.7; }
+            100% { transform: translateY(-50%) scaleX(0.3); opacity: 0.2; }
+        }
+        .cassette-label {
+            margin-top: 0.3em;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.5em;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            color: rgba(255,255,255,0.3);
+            text-transform: uppercase;
+        }
+
+        .cassette-hero {
+            font-size: clamp(80px, 22vw, 220px);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.07;
+            pointer-events: none;
+            z-index: 0;
+            filter: drop-shadow(0 0 60px rgba(34, 211, 238, 0.12)) drop-shadow(0 0 120px rgba(168, 85, 247, 0.08));
+        }
+        .cassette-hero-spin {
+            animation: hero-spin 25s linear infinite;
+            will-change: transform;
+        }
+        @keyframes hero-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .artist-image:hover img {
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.12), 0 0 40px rgba(34, 211, 238, 0.06);
+        }
+
+        #button button:hover .hx-not-indicator:last-child {
+            transform: translateX(4px);
+            transition: transform 0.3s ease;
+        }
+
+        #tourDates .timeline-item > div:first-child {
+            animation: dot-glow 3s ease-in-out infinite;
+            will-change: box-shadow;
+        }
+        @keyframes dot-glow {
+            0%, 100% { box-shadow: 0 0 3px rgba(34, 211, 238, 0.2); }
+            50% { box-shadow: 0 0 10px rgba(34, 211, 238, 0.5); }
+        }
+
+        .equalizer {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 0.75em;
+        }
+        .equalizer span {
+            width: 2px;
+            background: currentColor;
+            border-radius: 1px;
+            animation: eq 0.6s ease-in-out infinite alternate;
+        }
+        .equalizer span:nth-child(1) { height: 40%; animation-delay: 0s; }
+        .equalizer span:nth-child(2) { height: 65%; animation-delay: 0.12s; }
+        .equalizer span:nth-child(3) { height: 50%; animation-delay: 0.24s; }
+        .equalizer span:nth-child(4) { height: 80%; animation-delay: 0.36s; }
+
+        .equalizer-nav {
+            display: inline-flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 2px;
+        }
+        .equalizer-nav span {
+            width: 3px;
+            background: currentColor;
+            border-radius: 1px;
+            animation: eq 0.6s ease-in-out infinite alternate;
+        }
+        .equalizer-nav span:nth-child(1) { height: 35%; animation-delay: 0s; }
+        .equalizer-nav span:nth-child(2) { height: 75%; animation-delay: 0.12s; }
+        .equalizer-nav span:nth-child(3) { height: 50%; animation-delay: 0.24s; }
+        .equalizer-nav span:nth-child(4) { height: 85%; animation-delay: 0.36s; }
+
+        @keyframes eq {
+            from { height: 25%; }
+            to { height: 100%; }
+        }
+
+        @supports (animation-timeline: view()) {
+            @keyframes card-scroll-reveal {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px) scale(0.96) rotateY(-3deg);
+                    filter: blur(4px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1) rotateY(0deg);
+                    filter: blur(0);
+                }
+            }
+            .card-animate {
+                animation: card-scroll-reveal 0.8s linear both !important;
+                animation-timeline: view() !important;
+                animation-range: entry 0% entry 85% !important;
+            }
+            .card-animate:nth-child(5n+1),
+            .card-animate:nth-child(5n+2),
+            .card-animate:nth-child(5n+3),
+            .card-animate:nth-child(5n+4),
+            .card-animate:nth-child(5n+5) {
+                animation-delay: 0s !important;
+            }
+            @keyframes cassette-parallax {
+                from { top: 50%; }
+                to { top: 25%; }
+            }
+            .cassette-hero {
+                animation: cassette-parallax linear;
+                animation-timeline: scroll(root);
+                animation-range: 0% 40%;
+                will-change: top;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-old(*),
+            ::view-transition-new(*) { animation: none !important; }
+        }
+
+        ::view-transition-old(root) {
+            animation: vt-fade-out 0.25s ease-out both;
+        }
+        ::view-transition-new(root) {
+            animation: vt-fade-in 0.25s ease-out both;
+        }
+        @keyframes vt-fade-out {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        @keyframes vt-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 640px) {
+            .cassette-hero { font-size: 100px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hero-badge, .hero-title, .hero-desc, .hero-cta,
+            .card-animate, .page-entrance, .timeline-item,
+            .htmx-swapping { animation: none !important; transition: none !important; }
+            .hero-badge .animate-pulse, .skeleton { animation: none !important; opacity: 0.4; }
+            #tourDates .timeline-item > div:first-child,
+            .equalizer span, .equalizer-nav span { animation: none !important; }
+            #tourDates .timeline-item > div:first-child { box-shadow: 0 0 4px rgba(34, 211, 238, 0.25); }
+            .equalizer span:first-child, .equalizer span:nth-child(2),
+            .equalizer span:nth-child(3), .equalizer span:nth-child(4),
+            .equalizer-nav span { height: 40% !important; }
+            #button button:hover .hx-not-indicator:last-child { transform: none !important; transition: none !important; }
+            .cassette-reel, .cassette-tape-stripe, .cassette-hero-spin { animation: none !important; }
+            .cassette-tape-stripe { opacity: 0.35; }
+            .artist-image:hover img { box-shadow: none !important; }
+            .cassette-hero { animation: none !important; top: 50% !important; }
+        }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen">
-    <nav class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-800 sticky top-0 z-50">
+<body class="text-gray-100 min-h-screen flex flex-col">
+    <nav class="bg-gray-950/80 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <a href="/" class="flex items-center gap-2">
-                    <span class="text-2xl">🎵</span>
-                    <span class="font-heading text-xl font-bold text-neon-cyan">Groupie Tracker</span>
+                <a href="/" class="flex items-center gap-3 group">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-neon-cyan to-neon-purple flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <div class="equalizer-nav w-5 h-5 text-white" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+                    </div>
+                    <span class="font-heading text-lg font-bold text-white group-hover:text-neon-cyan transition-colors">Groupie Tracker</span>
                 </a>
-                <div class="hidden md:flex items-center gap-6">
-                    <a href="/" class="text-gray-300 hover:text-neon-cyan transition-colors">Artists</a>
-                    <a href="https://github.com/osugodbless/groupie-tracker" target="_blank" class="text-gray-300 hover:text-neon-cyan transition-colors">GitHub</a>
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="/" class="px-4 py-2 rounded-lg text-sm font-medium text-neon-cyan bg-white/5 hover:bg-white/10 transition-colors">Artists</a>
+                    <a href="https://github.com/osugodbless/groupie-tracker" target="_blank" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors">GitHub</a>
                 </div>
-                <button id="mobile-menu-btn" class="md:hidden text-gray-300 hover:text-neon-cyan">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
             </div>
         </div>
-        <div id="mobile-menu" class="hidden md:hidden bg-gray-900 border-t border-gray-800">
-            <div class="px-4 py-3 space-y-2">
-                <a href="/" class="block text-gray-300 hover:text-neon-cyan transition-colors py-2">Artists</a>
-                <a href="https://github.com/osugodbless/groupie-tracker" target="_blank" class="block text-gray-300 hover:text-neon-cyan transition-colors py-2">GitHub</a>
+        <div id="mobile-menu" class="hidden md:hidden border-t border-white/5">
+            <div class="px-4 py-3 space-y-1">
+                <a href="/" class="block px-3 py-2 rounded-lg text-sm font-medium text-neon-cyan bg-white/5">Artists</a>
+                <a href="https://github.com/osugodbless/groupie-tracker" target="_blank" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors">GitHub</a>
             </div>
         </div>
     </nav>
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-1">
         {{template "content" .}}
     </main>
-    <footer class="bg-gray-900/50 border-t border-gray-800 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <footer class="border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p class="text-gray-400 text-sm">&copy; 2026 Godbless. Built with Go + HTMX.</p>
-                <a href="https://github.com/osugodbless/groupie-tracker" target="_blank" class="text-neon-cyan hover:text-neon-purple transition-colors text-sm">View on GitHub →</a>
+                <p class="text-gray-500 text-sm flex items-center gap-2">
+                    <span class="equalizer" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+                    &copy; 2026 Godbless. Built with Go + HTMX.
+                </p>
+                <div class="flex items-center gap-6">
+                    <a href="https://github.com/osugodbless/groupie-tracker" target="_blank" class="text-gray-500 hover:text-neon-purple transition-colors text-sm">GitHub</a>
+                </div>
             </div>
         </div>
     </footer>
     <script>
-        const menuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        if (menuBtn && mobileMenu) {
-            menuBtn.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
+        (function() {
+            var menuBtn = document.getElementById('mobile-menu-btn');
+            var mobileMenu = document.getElementById('mobile-menu');
+            if (menuBtn && mobileMenu) {
+                menuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+
+            function markVisited() {
+                document.querySelectorAll('[data-artist-id]').forEach(function(card) {
+                    if (sessionStorage.getItem('gt-v-' + card.dataset.artistId)) {
+                        card.classList.add('visited');
+                    }
+                });
+            }
+
+            document.addEventListener('htmx:beforeRequest', function(evt) {
+                var el = evt.detail.elt;
+                if (el && el.dataset.artistId) {
+                    sessionStorage.setItem('gt-v-' + el.dataset.artistId, 'true');
+                }
             });
-        }
+
+            document.addEventListener('htmx:afterSettle', function(evt) {
+                var el = evt.detail.elt;
+                if (el && el.dataset.artistId && el.dataset.artistName) {
+                    document.title = el.dataset.artistName + ' - Groupie Tracker';
+                } else if (el && el.dataset.artistName && document.getElementById('tourDates')) {
+                    document.title = el.dataset.artistName + ' - Tour Dates - Groupie Tracker';
+                }
+                markVisited();
+            });
+
+            document.addEventListener('htmx:historyRestore', function() {
+                document.title = 'Groupie Tracker';
+            });
+
+            if (document.startViewTransition) {
+                document.addEventListener('htmx:beforeSwap', function(evt) {
+                    var target = evt.detail.target;
+                    if (evt.detail.serverResponse && (target.id === 'index' || target.id === 'button')) {
+                        evt.preventDefault();
+                        document.startViewTransition(function() {
+                            target.innerHTML = evt.detail.serverResponse;
+                            htmx.process(target);
+                        });
+                    }
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', markVisited);
+        })();
     </script>
 </body>
 </html>

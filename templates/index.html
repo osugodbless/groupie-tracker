@@ -1,71 +1,125 @@
 {{define "content"}}
-<div id="index" class="space-y-12">
-    <!-- Hero Section -->
-    <div class="text-center space-y-4">
-        <div class="inline-flex items-center gap-2 px-4 py-2 bg-neon-cyan/10 rounded-full border border-neon-cyan/20">
-            <span class="text-neon-cyan">🎶</span>
-            <span class="text-neon-cyan text-sm font-medium">Discover Music</span>
+<div id="index">
+    <!-- Hero -->
+    <div class="relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-neon-cyan/5 via-transparent to-transparent pointer-events-none"></div>
+        <div class="cassette cassette-hero" aria-hidden="true">
+            <div class="cassette-hero-spin">
+                <div class="cassette-body">
+                    <div class="cassette-reel cassette-reel-l">
+                        <div class="cassette-hub"></div>
+                    </div>
+                    <div class="cassette-tape">
+                        <div class="cassette-tape-stripe"></div>
+                    </div>
+                    <div class="cassette-reel cassette-reel-r">
+                        <div class="cassette-hub"></div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <h1 class="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent">
-            Band Artists Hub
-        </h1>
-        <p class="text-gray-400 max-w-2xl mx-auto text-lg">
-            Explore comprehensive data visualizations and insights for your favorite artists. Click on any artist card to discover their story through data.
-        </p>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-12 sm:pb-16">
+            <div class="text-center max-w-3xl mx-auto">
+                <div class="hero-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 mb-8">
+                    <span class="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-pulse"></span>
+                    Browse the lineup
+                </div>
+                <h1 class="hero-title font-heading text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-balance">
+                    <span class="bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent">Your backstage pass to</span>
+                    <br>
+                    <span class="bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent">every artist</span>
+                </h1>
+                <p class="hero-desc mt-6 text-lg sm:text-xl text-gray-400 leading-relaxed tracking-wide measure-body mx-auto">
+                    Browse every artist in the library. See who's in the band, when they started, 
+                    and where they've played—from debut to latest tour.
+                </p>
+                <div class="hero-cta mt-10 flex items-center justify-center gap-4">
+                    <a href="#artists" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-gray-950 font-semibold hover:bg-gray-100 transition-colors">
+                        Explore Artists
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Stats -->
-    <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
-        <div class="bg-gray-900/50 border border-gray-800 rounded-xl p-6 text-center">
-            <h3 class="font-heading text-3xl font-bold text-neon-cyan">{{ len . }}</h3>
-            <p class="text-gray-400 text-sm mt-1">Artists</p>
-        </div>
-        <div class="bg-gray-900/50 border border-gray-800 rounded-xl p-6 text-center">
+    <!-- Stats bar -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-12">
+        <div class="grid grid-cols-2 gap-px rounded-2xl overflow-hidden bg-white/5">
+            <div class="bg-gray-950 py-5 sm:py-6 text-center">
+                <p class="font-heading text-3xl sm:text-4xl font-bold tracking-stat text-neon-cyan">{{ len . }}</p>
+                <p class="text-sm text-neon-cyan/70 mt-1">Artists</p>
+            </div>
             {{ $totalLength := 0 }}
             {{ range . }}
             {{ $length := len .DatesLocation }}
             {{ $totalLength = add $totalLength $length}}
             {{ end }}
-            <h3 class="font-heading text-3xl font-bold text-neon-purple">{{ $totalLength }}</h3>
-            <p class="text-gray-400 text-sm mt-1">Concert Dates</p>
+            <div class="bg-gray-950 py-6 sm:py-8 text-center">
+                <p class="font-heading text-3xl sm:text-4xl font-bold tracking-stat text-neon-purple">{{ $totalLength }}</p>
+                <p class="text-sm text-neon-purple/70 mt-1">Concert Dates</p>
+            </div>
         </div>
     </div>
 
     <!-- Artist Grid -->
-    <div class="space-y-6">
-        <div class="flex items-center gap-3">
-            <span class="text-2xl">🎤</span>
-            <h2 class="font-heading text-2xl font-bold text-white">Featured Artists</h2>
+    <div id="artists" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 sm:pb-28">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <div class="w-10 h-0.5 bg-gradient-to-r from-neon-cyan to-neon-purple rounded-full mb-4"></div>
+                <h2 class="font-heading text-2xl sm:text-3xl font-bold text-white text-balance">All Artists</h2>
+                <p class="text-gray-500 text-sm mt-1">{{ len . }} artists</p>
+            </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             {{ range . }}
             <div id="{{ .ID }}"
+                data-artist-id="{{ .ID }}"
+                data-artist-name="{{ .Name }}"
                 hx-get="/artist/{{ .ID }}"
                 hx-target="#index"
-                hx-swap="outerHTML"
+                hx-swap="outerHTML transition:true"
+                hx-push-url="true"
                 hx-indicator="#loading-{{ .ID }}"
-                class="group bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden hover:border-neon-cyan/50 hover:shadow-lg hover:shadow-neon-cyan/10 transition-all duration-300 cursor-pointer">
-                <div class="relative aspect-square overflow-hidden">
-                    <img src="{{ .Image }}" alt="{{ .Name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                    <div class="absolute inset-0 bg-gradient-to-t from-gray-950/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-                <div class="p-4">
-                    <h4 class="font-heading text-lg font-semibold text-white group-hover:text-neon-cyan transition-colors">{{ .Name }}</h4>
-                    <div class="flex items-center gap-2 mt-2">
-                        <span class="w-2 h-2 bg-neon-purple rounded-full"></span>
-                        <p class="text-gray-400 text-sm">Est. {{ .CreationYear }}</p>
+                class="card-glow card-animate group relative rounded-xl overflow-hidden bg-white/5 cursor-pointer hover:-translate-y-0.5 transition-transform duration-300">
+                <div class="aspect-square overflow-hidden bg-white/5 relative">
+                    <img src="{{ .Image }}" alt="{{ .Name }}"
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+                        style="view-transition-name: at-{{ .ID }}"
+                        loading="lazy"
+                        onerror="this.classList.add('error')">
+                    <div class="img-fallback" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white/20" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                        </svg>
                     </div>
                 </div>
-                <div id="loading-{{ .ID }}" class="hx-indicator">
+                <div class="p-3 sm:p-4">
+                    <p class="font-heading font-semibold text-white text-sm sm:text-base truncate group-hover:text-neon-cyan transition-colors">{{ .Name }}</p>
+                    <div class="flex items-center gap-1.5 mt-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-neon-purple shrink-0"></span>
+                        <p class="text-xs text-gray-500">Est. {{ .CreationYear }}</p>
+                    </div>
+                </div>
+                <div id="loading-{{ .ID }}" class="hx-indicator absolute inset-0 bg-gray-950/80 z-10">
                     <div class="p-4 space-y-3">
-                        <div class="skeleton h-4 bg-gray-800 rounded w-3/4"></div>
-                        <div class="skeleton h-3 bg-gray-800 rounded w-1/2"></div>
+                        <div class="skeleton h-4 bg-white/10 rounded w-3/4"></div>
+                        <div class="skeleton h-3 bg-white/10 rounded w-1/2"></div>
                     </div>
                 </div>
             </div>
             {{ else }}
-            <div class="col-span-full text-center py-12">
-                <p class="text-gray-400 text-lg">No artists found.</p>
+            <div class="col-span-full text-center py-20">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/5 mb-4">
+                    <svg viewBox="0 0 24 24" class="w-8 h-8 text-white/20" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                    </svg>
+                </div>
+                <p class="text-gray-400 text-lg font-medium">No artists found</p>
+                <p class="text-gray-600 text-sm mt-1">No artist data to show yet.</p>
             </div>
             {{ end }}
         </div>
