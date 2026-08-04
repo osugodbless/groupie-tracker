@@ -28,7 +28,7 @@ var funcMap = template.FuncMap{
 	},
 }
 
-var baseTmpl = template.Must(template.New("base").Funcs(funcMap).ParseFiles("templates/base.html", "templates/index.html", "templates/artistsDetails.html", "templates/tour-dates.html"))
+var baseTmpl = template.Must(template.New("base").Funcs(funcMap).ParseFiles("templates/base.tmpl", "templates/index.tmpl", "templates/artistsDetails.tmpl", "templates/tour-dates.tmpl"))
 
 func main() {
 

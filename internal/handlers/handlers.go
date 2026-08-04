@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/osugodbless/groupie-tracker/internal/config"
 )
@@ -27,10 +28,18 @@ func (app *Application) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	renderTemplate(w, app, "base.html", config.ArtistByID)
+	renderTemplate(w, app, "base.tmpl", config.ArtistByID)
 }
 
-func (app *Application) ArtistHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) ArtistsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	renderTemplate(w, app, "artists.tmpl", config.ArtistByID)
+}
+
+func (app *Application) GetArtistHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -52,7 +61,7 @@ func (app *Application) ArtistHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	renderTemplate(w, app, "artistsDetails.html", artist)
+	renderTemplate(w, app, "artistsDetails.tmpl", artist)
 }
 
 func (app *Application) TourDatesHandler(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +86,30 @@ func (app *Application) TourDatesHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	renderTemplate(w, app, "tour-dates.html", artist)
+	renderTemplate(w, app, "tour-dates.tmpl", artist)
+}
+
+func (app *Application) SearchArtists(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	query := r.FormValue("query")
+
+	var matches map[int]config.Artist
+
+	if query == "" {
+		matches = config.ArtistByID
+	} else {
+		matches = make(map[int]config.Artist)
+		for id, artist := range config.ArtistByID {
+			if strings.Contains(strings.ToLower(artist.Name), strings.ToLower(query)) {
+				matches[id] = artist
+			}
+		}
+	}
+	renderTemplate(w, app, "search-results.tmpl", matches)
 }
 
 func getArtistByID(id int) (config.Artist, error) {

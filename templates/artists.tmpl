@@ -1,5 +1,5 @@
-{{define "content"}}
-<div id="index">
+{{define "artists-page"}}
+<div id="artists-page">
     <!-- Hero -->
     <div class="relative overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-b from-neon-cyan/5 via-transparent to-transparent pointer-events-none"></div>
@@ -64,6 +64,22 @@
         </div>
     </div>
 
+    <div class="filters">
+        <div class="search filter">
+            <h3>
+                Search Artists
+                <span class="htmx-indicator">Searching...</span>
+            </h3>
+            <input class="form-control" type="search"
+                name="query" placeholder="Begin Typing To Search Artists..."
+                hx-post="/artists/search"
+                hx-trigger="input changed delay:500ms, keyup[key=='Enter'], load"
+                hx-target="#search-results"
+                hx-indicator=".htmx-indicator"
+                hx-push-url="true">
+        </div>
+    </div>
+
     <!-- Artist Grid -->
     <div id="artists" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 sm:pb-28">
         <div class="flex items-center justify-between mb-6">
@@ -74,13 +90,13 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+        <div id="search-results" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             {{ range . }}
             <div id="{{ .ID }}"
                 data-artist-id="{{ .ID }}"
                 data-artist-name="{{ .Name }}"
                 hx-get="/artists/{{ .ID }}"
-                hx-target="#index"
+                hx-target="#artists-page"
                 hx-swap="outerHTML transition:true"
                 hx-push-url="true"
                 hx-indicator="#loading-{{ .ID }}"

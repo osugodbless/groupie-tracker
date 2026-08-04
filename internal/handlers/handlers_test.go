@@ -37,9 +37,9 @@ var secondMockArtist = config.Artist{
 }
 
 var testTemplate = `
-		{{define "base.html"}}<div>Base Template</div>{{end}}
-		{{define "artistsDetails.html"}}<div>Artist Details: {{.Name}}</div>{{end}}
-		{{define "tour-dates.html"}}<div>Tour Dates: {{.Name}}</div>{{end}}
+		{{define "base.tmpl"}}<div>Base Template</div>{{end}}
+		{{define "artistsDetails.tmpl"}}<div>Artist Details: {{.Name}}</div>{{end}}
+		{{define "tour-dates.tmpl"}}<div>Tour Dates: {{.Name}}</div>{{end}}
 	`
 
 func setup() (*handlers.Application, map[int]config.Artist) {
@@ -163,7 +163,7 @@ func TestArtistHandler(t *testing.T) {
 			r.SetPathValue("id", tt.pathValue)
 			w := httptest.NewRecorder()
 
-			app.ArtistHandler(w, r)
+			app.GetArtistHandler(w, r)
 
 			if w.Code != tt.status {
 				t.Errorf("expected status %d, got %d", tt.status, w.Code)
@@ -250,7 +250,7 @@ func TestRenderTemplateError(t *testing.T) {
 		1: firstMockArtist,
 	}
 
-	tmpl := template.Must(template.New("test").Parse(`{{define "something.html"}}ok{{end}}`))
+	tmpl := template.Must(template.New("test").Parse(`{{define "something.tmpl"}}ok{{end}}`))
 
 	app := &handlers.Application{
 		Templates: tmpl,
@@ -260,7 +260,7 @@ func TestRenderTemplateError(t *testing.T) {
 	r.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
-	app.ArtistHandler(w, r)
+	app.GetArtistHandler(w, r)
 
 	if w.Code != http.StatusInternalServerError {
 		t.Errorf("expected 500 for template execution error, got %d", w.Code)
@@ -275,7 +275,7 @@ func TestTourDatesRenderTemplateError(t *testing.T) {
 		1: firstMockArtist,
 	}
 
-	tmpl := template.Must(template.New("test").Parse(`{{define "something.html"}}ok{{end}}`))
+	tmpl := template.Must(template.New("test").Parse(`{{define "something.tmpl"}}ok{{end}}`))
 
 	app := &handlers.Application{
 		Templates: tmpl,
@@ -303,7 +303,7 @@ func TestGetArtistByIDNotFound(t *testing.T) {
 		Templates: template.Must(template.New("test").Parse(testTemplate)),
 	}
 
-	app.ArtistHandler(w, r)
+	app.GetArtistHandler(w, r)
 
 	if w.Code != http.StatusNotFound {
 		t.Errorf("expected 404, got %d", w.Code)
@@ -321,7 +321,7 @@ func TestArtistHandlerResponseBody(t *testing.T) {
 	r.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
-	app.ArtistHandler(w, r)
+	app.GetArtistHandler(w, r)
 
 	body := w.Body.String()
 	if !strings.Contains(body, "Artist Details: Mock Artist") {
@@ -365,7 +365,7 @@ func TestHomeHandlerRenderTemplateError(t *testing.T) {
 		1: firstMockArtist,
 	}
 
-	tmpl := template.Must(template.New("test").Parse(`{{define "something.html"}}ok{{end}}`))
+	tmpl := template.Must(template.New("test").Parse(`{{define "something.tmpl"}}ok{{end}}`))
 
 	app := &handlers.Application{
 		Templates: tmpl,
@@ -391,7 +391,7 @@ func TestArtistHandlerMethodNotAllowed(t *testing.T) {
 			r.SetPathValue("id", "1")
 			w := httptest.NewRecorder()
 
-			app.ArtistHandler(w, r)
+			app.GetArtistHandler(w, r)
 
 			if w.Code != http.StatusMethodNotAllowed {
 				t.Errorf("expected 405 for %s, got %d", method, w.Code)

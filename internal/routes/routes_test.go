@@ -55,6 +55,7 @@ func TestRoutes(t *testing.T) {
 	}{
 		{"Test Home Route", "GET", "/", http.StatusOK},
 		{"Test Artist Route", "GET", "/artist/1", http.StatusOK},
+		{"Test Search Artists Route", "POST", "/artists/search", http.StatusOK},
 		{"Test Tour Dates Route", "GET", "/artist/1/tour-data", http.StatusOK},
 		{"Test Non-existent Artist Route", "GET", "/artist/9999", http.StatusNotFound},
 	}
