@@ -64,7 +64,6 @@
                 <button
                     hx-get="/artists/{{ .ID }}/tour-data"
                     hx-target="#button"
-                    hx-swap="outerHTML transition:true"
                     hx-indicator="#tour-loading"
                     data-artist-name="{{ .Name }}"
                     class="inline-flex items-center gap-2 px-6 py-3 bg-neon-cyan/10 border border-neon-cyan/30 rounded-xl text-neon-cyan font-semibold hover:bg-neon-cyan/20 hover:border-neon-cyan/50 transition-all duration-300">

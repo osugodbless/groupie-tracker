@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"bytes"
 	"errors"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,12 +17,15 @@ type Application struct {
 }
 
 func renderTemplate(w http.ResponseWriter, app *Application, contentFile string, data any) {
-
-	err := app.Templates.ExecuteTemplate(w, contentFile, data)
+	buf := new(bytes.Buffer)
+	err := app.Templates.ExecuteTemplate(buf, contentFile, data)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
+	buf.WriteTo(w)
 }
 
 func (app *Application) HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +41,7 @@ func (app *Application) ArtistsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	renderTemplate(w, app, "artists.tmpl", config.ArtistByID)
+	renderTemplate(w, app, "artists-page", config.ArtistByID)
 }
 
 func (app *Application) GetArtistHandler(w http.ResponseWriter, r *http.Request) {
@@ -90,7 +95,7 @@ func (app *Application) TourDatesHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *Application) SearchArtists(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -109,7 +114,7 @@ func (app *Application) SearchArtists(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	renderTemplate(w, app, "search-results.tmpl", matches)
+	renderTemplate(w, app, "artists:grid", matches)
 }
 
 func getArtistByID(id int) (config.Artist, error) {

@@ -1,12 +1,12 @@
 {{define "landing-page"}}
-<div id="index">
-    <div>
+<div id="content">
+    <div id="landing">
         <div>
 
         </div>
         <button
         hx-get="/artists"
-        hx-target="#index"
+        hx-target="#content"
         hx-push-url="true">
             <div class="flex items-center justify-center gap-2 px-6 py-3 bg-neon-cyan/10 border border-neon-cyan/30 rounded-xl text-neon-cyan font-semibold hover:bg-neon-cyan/20 hover:border-neon-cyan/50 transition-all duration-300">
                 <span class="hx-indicator hidden">
