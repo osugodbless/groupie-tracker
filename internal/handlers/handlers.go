@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
 	"html/template"
 	"log"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -14,6 +16,13 @@ import (
 
 type Application struct {
 	Templates *template.Template
+}
+
+type Filters struct {
+	Search       string
+	Sort         string
+	NumOfMembers string
+	ConcertLoc   string
 }
 
 func renderTemplate(w http.ResponseWriter, app *Application, contentFile string, data any) {
@@ -94,14 +103,47 @@ func (app *Application) TourDatesHandler(w http.ResponseWriter, r *http.Request)
 	renderTemplate(w, app, "tour-dates.tmpl", artist)
 }
 
-func (app *Application) SearchArtists(w http.ResponseWriter, r *http.Request) {
+func (app *Application) FilterArtists(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	query := r.FormValue("query")
+	filters := Filters{
+		Search:       r.FormValue("search"),
+		Sort:         r.FormValue("sort"),
+		NumOfMembers: r.FormValue("members"),
+		ConcertLoc:   r.FormValue("concert-loc"),
+	}
 
+	if filters.Search != "" {
+		matches := searchArtistsByName(filters.Search)
+		renderTemplate(w, app, "artists:grid", matches)
+		return
+	}
+
+	if filters.Sort != "" {
+		artistsToSort := make([]config.Artist, 0, len(config.ArtistByID))
+		for _, artist := range config.ArtistByID {
+			artistsToSort = append(artistsToSort, artist)
+		}
+		sortedArtists := sortArtists(artistsToSort, filters.Sort)
+		renderTemplate(w, app, "artists:grid", sortedArtists)
+		return
+	}
+
+	renderTemplate(w, app, "artists:grid", config.ArtistByID)
+}
+
+func getArtistByID(id int) (config.Artist, error) {
+	artist, ok := config.ArtistByID[id]
+	if ok {
+		return artist, nil
+	}
+	return config.Artist{}, errors.New("Artist not found")
+}
+
+func searchArtistsByName(query string) map[int]config.Artist {
 	var matches map[int]config.Artist
 
 	if query == "" {
@@ -114,23 +156,30 @@ func (app *Application) SearchArtists(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	renderTemplate(w, app, "artists:grid", matches)
+
+	return matches
 }
 
-func (app *Application) SortArtistsHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
+func sortArtists(artists []config.Artist, sortBy string) []config.Artist {
+	sortBy = strings.ToLower(strings.TrimSpace(sortBy))
+	switch sortBy {
+	case "name-asc":
+		slices.SortFunc(artists, func(a, b config.Artist) int {
+			return cmp.Compare(a.Name, b.Name)
+		})
+
+	case "name-desc":
+		slices.SortFunc(artists, func(a, b config.Artist) int {
+			return cmp.Compare(b.Name, a.Name)
+		})
+	case "members":
+		// Sorting logic for number of members can be implemented here
+	case "creationdate":
+		// Sorting logic for creation date can be implemented here
+	default:
+		log.Printf("Unknown sort option: %s", sortBy)
 	}
 
-	sort := r.FormValue("sort")
+	return artists
 
-}
-
-func getArtistByID(id int) (config.Artist, error) {
-	artist, ok := config.ArtistByID[id]
-	if ok {
-		return artist, nil
-	}
-	return config.Artist{}, errors.New("Artist not found")
 }
