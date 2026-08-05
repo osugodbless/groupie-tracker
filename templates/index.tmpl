@@ -1,26 +1,131 @@
 {{define "landing-page"}}
-<div id="content">
-    <div id="landing">
-        <div>
+<!--
+  THESIS: The landing is a door, not a hero. Where the category lands on a big headline over one photo, this viewport makes the whole room the evidence: a dim wall of every real artist's image bleeding off all four edges, and one bright statement owning the contrast.
+  OWN-WORLD: a #030712 chamber lit by the incumbent neon radial glows; all 52 artist images as dim tiles (14% opacity) in a full-bleed grid that drifts like the room is breathing; Space Grotesk statement, DM Sans body; the only bright elements are the headline, the pulse dot, and the cyan door.
+  STORY: A visitor walks into a venue, sees every act that plays here on the wall, reads who is in the building, and steps up to the one bright door that opens onto the floor.
+  FIRST VIEWPORT: wall tiles everywhere, center-stacked badge / headline / line / door, bottom house-board with live artist and concert-date counts.
+  FORM: Venue Wall (assigned candidate 4 of 7; seed 02493152), dressed with aperture staging: the wall dims room-wide, hover focuses the tile under the pointer, and the door dissolves the wall into the grid via the existing HTMX swap and view transition.
+-->
 
-        </div>
-        <button
-        hx-get="/artists"
-        hx-target="#content"
-        hx-push-url="true">
-            <div class="flex items-center justify-center gap-2 px-6 py-3 bg-neon-cyan/10 border border-neon-cyan/30 rounded-xl text-neon-cyan font-semibold hover:bg-neon-cyan/20 hover:border-neon-cyan/50 transition-all duration-300">
-                <span class="hx-indicator hidden">
-                    <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </span>
-                <span class="hx-not-indicator">View Artists</span>
-                <svg class="w-5 h-5 hx-not-indicator" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                </svg>
+<div id="content">
+    <section id="venue-wall" class="relative min-h-[calc(100vh-4rem)] overflow-hidden flex flex-col items-center justify-center text-center">
+        <!-- THE WALL: full-bleed mosaic of every real artist, dim, bleeding off every edge -->
+        <div class="wall-drift" aria-hidden="true">
+            {{ range . }}
+            <div class="wall-tile">
+                <img src="{{ .Image }}" alt="" loading="lazy" decoding="async" onerror="this.classList.add('error')">
             </div>
-        </button>
-    </div>
+            {{ end }}
+        </div>
+        <div class="wall-vignette absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+
+        <!-- THE STATEMENT -->
+        <div class="relative z-10 px-4 sm:px-6 max-w-3xl mx-auto">
+            <div class="hero-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 mb-8">
+                <span class="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-pulse"></span>
+                <span class="tracking-meta uppercase text-xs">{{ len . }} acts &middot; one room</span>
+            </div>
+            <h1 class="hero-title font-heading text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-balance text-white">
+                The whole scene<br>
+                is on the wall.
+            </h1>
+            <p class="hero-desc mt-6 text-lg sm:text-xl text-gray-300 leading-relaxed tracking-body measure-body mx-auto">
+                Every artist we track &mdash; their members, first album, and every show they've ever played. Find your act and step in.
+            </p>
+            <div class="hero-cta mt-10 flex items-center justify-center gap-4">
+                <button hx-get="/artists"
+                    hx-target="#content"
+                    hx-push-url="true"
+                    class="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-neon-cyan/10 border border-neon-cyan/40 text-neon-cyan font-heading font-semibold text-base sm:text-lg hover:bg-neon-cyan/20 hover:border-neon-cyan/70 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950">
+                    <span class="hx-indicator hidden">
+                        <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                    <span class="hx-not-indicator">Browse the lineup</span>
+                    <svg class="w-5 h-5 hx-not-indicator transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- HOUSE BOARD: live counts -->
+        <div class="house-board relative z-10 absolute bottom-0 inset-x-0 pb-6 sm:pb-8 pt-10 bg-gradient-to-t from-gray-950 to-transparent">
+            {{ $totalDates := 0 }}
+            {{ range . }}
+            {{ range $loc, $dates := .DatesLocation }}
+            {{ $totalDates = add $totalDates (len $dates) }}
+            {{ end }}
+            {{ end }}
+            <div class="flex items-center justify-center gap-8 sm:gap-14">
+                <div class="text-center">
+                    <p class="font-heading text-3xl sm:text-4xl font-bold tracking-stat text-white">{{ len . }}</p>
+                    <p class="text-xs sm:text-sm text-gray-400 tracking-meta uppercase mt-1">Artists</p>
+                </div>
+                <div class="w-px h-10 bg-white/10" aria-hidden="true"></div>
+                <div class="text-center">
+                    <p class="font-heading text-3xl sm:text-4xl font-bold tracking-stat text-white">{{ $totalDates }}</p>
+                    <p class="text-xs sm:text-sm text-gray-400 tracking-meta uppercase mt-1">Concert dates</p>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
+
+<style>
+    .wall-drift {
+        position: absolute;
+        inset: -15% 0;
+        display: grid;
+        grid-template-columns: repeat(var(--wall-cols, 4), 1fr);
+        grid-auto-rows: 1fr;
+        animation: wall-in 1s cubic-bezier(0.16, 1, 0.3, 1) both, wall-drift 48s ease-in-out infinite alternate;
+        will-change: transform;
+        z-index: 0;
+    }
+    .wall-tile {
+        position: relative;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .wall-tile img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.14;
+        filter: saturate(0.75);
+        transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
+    }
+    .wall-tile:hover img {
+        opacity: 0.5;
+        transform: scale(1.1);
+        filter: saturate(1);
+    }
+    .wall-vignette {
+        background:
+            radial-gradient(ellipse 95% 75% at 50% 42%, transparent 28%, rgba(3, 7, 18, 0.74) 100%),
+            linear-gradient(to bottom, rgba(3, 7, 18, 0.55), rgba(3, 7, 18, 0.4) 40%, rgba(3, 7, 18, 0.86) 100%);
+        z-index: 1;
+    }
+    @keyframes wall-in {
+        from { opacity: 0.25; }
+        to { opacity: 1; }
+    }
+    @keyframes wall-drift {
+        from { transform: translateY(-2.5%); }
+        to { transform: translateY(2.5%); }
+    }
+    @media (min-width: 640px) {
+        .wall-drift { --wall-cols: 6; }
+    }
+    @media (min-width: 1024px) {
+        .wall-drift { --wall-cols: 8; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .wall-drift { animation: wall-in 0.6s ease-out both; }
+        .wall-tile:hover img { transform: none; }
+    }
+</style>
 {{end}}

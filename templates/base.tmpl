@@ -488,7 +488,7 @@
             if (document.startViewTransition) {
                 document.addEventListener('htmx:beforeSwap', function(evt) {
                     var target = evt.detail.target;
-                    if (evt.detail.serverResponse && (target.id === 'index' || target.id === 'button')) {
+                    if (evt.detail.serverResponse && (target.id === 'content' || target.id === 'index' || target.id === 'button')) {
                         evt.preventDefault();
                         document.startViewTransition(function() {
                             target.innerHTML = evt.detail.serverResponse;

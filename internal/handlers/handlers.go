@@ -117,6 +117,16 @@ func (app *Application) SearchArtists(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, app, "artists:grid", matches)
 }
 
+func (app *Application) SortArtistsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	sort := r.FormValue("sort")
+
+}
+
 func getArtistByID(id int) (config.Artist, error) {
 	artist, ok := config.ArtistByID[id]
 	if ok {

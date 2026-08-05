@@ -1,0 +1,208 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-04T00:00:00Z",
+  "title": "Design System: Groupie Tracker",
+  "extensions": {
+    "colorMeta": {
+      "stage-cyan": {
+        "role": "primary",
+        "displayName": "Stage Cyan",
+        "canonical": "oklch(0.62 0.15 198)",
+        "tonalRamp": [
+          "oklch(0.18 0.10 198)",
+          "oklch(0.28 0.12 198)",
+          "oklch(0.38 0.13 198)",
+          "oklch(0.48 0.15 198)",
+          "oklch(0.60 0.15 198)",
+          "oklch(0.70 0.13 198)",
+          "oklch(0.82 0.10 198)",
+          "oklch(0.94 0.04 198)"
+        ]
+      },
+      "amp-purple": {
+        "role": "secondary",
+        "displayName": "Amp Purple",
+        "canonical": "oklch(0.62 0.25 295)",
+        "tonalRamp": [
+          "oklch(0.20 0.12 295)",
+          "oklch(0.30 0.16 295)",
+          "oklch(0.40 0.19 295)",
+          "oklch(0.50 0.22 295)",
+          "oklch(0.60 0.24 295)",
+          "oklch(0.70 0.21 295)",
+          "oklch(0.82 0.15 295)",
+          "oklch(0.94 0.06 295)"
+        ]
+      },
+      "house-pink": {
+        "role": "tertiary",
+        "displayName": "House Pink",
+        "canonical": "oklch(0.68 0.22 350)",
+        "tonalRamp": [
+          "oklch(0.20 0.10 350)",
+          "oklch(0.30 0.14 350)",
+          "oklch(0.40 0.17 350)",
+          "oklch(0.50 0.19 350)",
+          "oklch(0.62 0.21 350)",
+          "oklch(0.72 0.19 350)",
+          "oklch(0.83 0.14 350)",
+          "oklch(0.94 0.06 350)"
+        ]
+      },
+      "house-black": {
+        "role": "neutral",
+        "displayName": "House Black",
+        "canonical": "oklch(0.13 0.01 260)",
+        "tonalRamp": [
+          "oklch(0.10 0.01 260)",
+          "oklch(0.13 0.01 260)",
+          "oklch(0.18 0.012 260)",
+          "oklch(0.24 0.014 260)",
+          "oklch(0.32 0.016 260)",
+          "oklch(0.42 0.018 260)",
+          "oklch(0.56 0.02 260)",
+          "oklch(0.90 0.005 260)"
+        ]
+      },
+      "text-body": {
+        "role": "neutral",
+        "displayName": "Body Ash",
+        "canonical": "oklch(0.84 0.01 260)",
+        "tonalRamp": [
+          "oklch(0.20 0.01 260)",
+          "oklch(0.30 0.01 260)",
+          "oklch(0.40 0.01 260)",
+          "oklch(0.52 0.01 260)",
+          "oklch(0.64 0.01 260)",
+          "oklch(0.76 0.01 260)",
+          "oklch(0.86 0.01 260)",
+          "oklch(0.96 0.005 260)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "First-viewport statement on the landing. Appears once per surface at most." },
+      "headline": { "displayName": "Headline", "purpose": "Page-level titles on the artists grid and section titles." },
+      "title": { "displayName": "Title", "purpose": "Artist card names, button labels, brand wordmark." },
+      "body": { "displayName": "Body", "purpose": "All copy; 400/500 weight, caps at ~65-75ch." },
+      "label": { "displayName": "Label", "purpose": "Eyebrows, stat labels, hero badge text. Uppercase, wide tracking." }
+    },
+    "shadows": [
+      {
+        "name": "card-glow-halo",
+        "value": "inset: -1px; background: linear-gradient(135deg, rgba(34,211,238,0.3), rgba(168,85,247,0.3), rgba(236,72,153,0.3)); opacity: 0 → 1 on hover",
+        "purpose": "The only 'shadow' in the system. A gradient halo bloomed behind glass cards on hover via ::before; never present at rest."
+      }
+    ],
+    "motion": [
+      { "name": "ease-anticipate", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Landing-wall entrance and image hover scaling. Exponential out, lands softly." },
+      { "name": "fade-up", "value": "0.4-0.5s ease-out, translateY(16px) → 0, staggered 0.1s", "purpose": "Hero badge/title/description/CTA entrance on every page hero." },
+      { "name": "card-entrance", "value": "0.35s ease-out, translateY(10px) scale(0.98) → 1, 5-step stagger 0.06s", "purpose": "Artist grid cards on load." },
+      { "name": "slide-in-left", "value": "0.4s ease-out, translateX(-12px) → 0, 8-step stagger 0.08s", "purpose": "Tour timeline items on load." },
+      { "name": "scale-in", "value": "0.3s ease-out, scale(0.96) → 1", "purpose": "Page entrance on HTMX swaps." },
+      { "name": "wall-drift", "value": "48s ease-in-out infinite alternate, translateY(-2.5%) → 2.5%", "purpose": "Slow breathing drift of the landing wall. Dropped under prefers-reduced-motion." },
+      { "name": "glow-pulse", "value": "opacity 0.4 → 0.8, 3s ease-in-out infinite", "purpose": "Live dot beside tour dates on the timeline." },
+      { "name": "view-transition", "value": "0.25s, old fades out / new slides up", "purpose": "Page-to-page morphs (grid → artist detail) and the wall → grid dissolve." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button — The Neon Door",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single bright action per screen: glass cyan fill, cyan hairline, cyan label, arrow that slides right on hover.",
+      "html": "<button class=\"ds-btn-primary\"><span>Browse the lineup</span><svg class=\"ds-btn-arrow\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M17 8l4 4m0 0l-4 4m4-4H3\"/></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 12px; padding: 16px 32px; border-radius: 16px; background: rgba(34,211,238,0.10); border: 1px solid rgba(34,211,238,0.40); color: #22d3ee; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 18px; line-height: 1.3; cursor: pointer; transition: background 0.3s ease, border-color 0.3s ease; } .ds-btn-primary svg { width: 20px; height: 20px; transition: transform 0.3s ease; } .ds-btn-primary:hover { background: rgba(34,211,238,0.20); border-color: rgba(34,211,238,0.70); } .ds-btn-primary:hover svg { transform: translateX(4px); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #22d3ee, 0 0 0 4px #030712; }"
+    },
+    {
+      "name": "Solid Button — Explore",
+      "kind": "button",
+      "refersTo": "button-solid",
+      "description": "The one opaque, high-contrast action in the system: white fill, house-black label.",
+      "html": "<button class=\"ds-btn-solid\">Explore Artists</button>",
+      "css": ".ds-btn-solid { display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; border-radius: 12px; background: #ffffff; border: none; color: #030712; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; line-height: 1.3; cursor: pointer; transition: background 0.2s ease; } .ds-btn-solid:hover { background: #f3f4f6; } .ds-btn-solid:focus-visible { outline: none; box-shadow: 0 0 0 2px #22d3ee, 0 0 0 4px #030712; }"
+    },
+    {
+      "name": "Artist Card",
+      "kind": "card",
+      "refersTo": "artist-card",
+      "description": "Glass tile holding a square poster-frame photo that scales on hover, with a gradient halo blooming behind the whole card.",
+      "html": "<div class=\"ds-card\" tabindex=\"0\"><img class=\"ds-card-img\" src=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Crect width='320' height='320' fill='%2322d3ee' opacity='0.25'/%3E%3C/svg%3E\" alt=\"\"/><p class=\"ds-card-name\">Artist Name</p><p class=\"ds-card-meta\">est. 1998</p></div>",
+      "css": ".ds-card { position: relative; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); overflow: hidden; padding: 12px 16px 16px; cursor: pointer; transition: transform 0.3s ease; } .ds-card::before { content: ''; position: absolute; inset: -1px; border-radius: inherit; background: linear-gradient(135deg, rgba(34,211,238,0.3), rgba(168,85,247,0.3), rgba(236,72,153,0.3)); opacity: 0; transition: opacity 0.4s ease; z-index: -1; } .ds-card-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; border: 1px solid #1f2937; transition: transform 0.5s cubic-bezier(0.16,1,0.3,1); } .ds-card-name { margin: 12px 0 0; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; line-height: 1.3; color: #ffffff; transition: color 0.2s ease; } .ds-card-meta { margin: 2px 0 0; font-family: 'DM Sans', sans-serif; font-size: 14px; color: #9ca3af; } .ds-card:hover { transform: translateY(-2px); } .ds-card:hover::before { opacity: 1; } .ds-card:hover .ds-card-img { transform: scale(1.1); border-color: rgba(34,211,238,0.50); } .ds-card:hover .ds-card-name { color: #22d3ee; } .ds-card:focus-visible { outline: none; box-shadow: 0 0 0 2px #22d3ee, 0 0 0 4px #030712; }"
+    },
+    {
+      "name": "Member Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Small glass tag for band members and date pills; hover lifts the border and text into a cycling neon accent.",
+      "html": "<span class=\"ds-chip\">Dave Murray</span>",
+      "css": ".ds-chip { display: inline-block; padding: 6px 12px; border-radius: 8px; background: rgba(17,24,39,0.50); border: 1px solid #1f2937; color: #d1d5db; font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.5; transition: color 0.2s ease, border-color 0.2s ease; } .ds-chip:hover { border-color: rgba(236,72,153,0.50); color: #ec4899; }"
+    },
+    {
+      "name": "Nav Link",
+      "kind": "nav",
+      "refersTo": "nav-link-active",
+      "description": "Fixed glass nav with an active cyan-on-glass link and idle links that brighten on hover.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link\" href=\"#\">Artists</a><a class=\"ds-nav-link ds-nav-link-active\" href=\"#\">Tour</a><a class=\"ds-nav-link\" href=\"#\">GitHub</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; } .ds-nav-link { padding: 8px 16px; border-radius: 8px; color: #9ca3af; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; text-decoration: none; transition: color 0.2s ease, background 0.2s ease; } .ds-nav-link:hover { color: #ffffff; background: rgba(255,255,255,0.05); } .ds-nav-link-active { color: #22d3ee; background: rgba(255,255,255,0.05); } .ds-nav-link:focus-visible { outline: none; box-shadow: 0 0 0 2px #22d3ee, 0 0 0 4px #030712; }"
+    },
+    {
+      "name": "House Board Stat",
+      "kind": "custom",
+      "refersTo": "artist-card",
+      "description": "Two live counts separated by a hairline gap: display numerals in white, uppercase label lines below.",
+      "html": "<div class=\"ds-statboard\"><div class=\"ds-stat\"><p class=\"ds-stat-num\">52</p><p class=\"ds-stat-label\">Artists</p></div><div class=\"ds-stat-divider\"></div><div class=\"ds-stat\"><p class=\"ds-stat-num\">438</p><p class=\"ds-stat-label\">Concert dates</p></div></div>",
+      "css": ".ds-statboard { display: flex; align-items: center; gap: 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden; } .ds-stat { flex: 1; text-align: center; padding: 16px 24px; background: #030712; } .ds-stat-num { margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 36px; line-height: 1.1; letter-spacing: -0.03em; color: #ffffff; } .ds-stat-label { margin: 4px 0 0; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #9ca3af; } .ds-stat-divider { width: 1px; align-self: stretch; background: rgba(255,255,255,0.10); }"
+    },
+    {
+      "name": "Tour Timeline Item",
+      "kind": "custom",
+      "refersTo": "artist-card",
+      "description": "Glass event tile beside a cyan→purple→pink gradient rail with a cyan dot; border tints cyan on hover.",
+      "html": "<div class=\"ds-timeline\"><span class=\"ds-timeline-dot\"></span><div class=\"ds-timeline-item\"><p class=\"ds-timeline-city\">Berlin, Germany</p><p class=\"ds-timeline-date\">2026-09-14</p></div></div>",
+      "css": ".ds-timeline { display: flex; align-items: flex-start; gap: 16px; padding-left: 16px; border-left: 2px solid; border-image: linear-gradient(to bottom, #22d3ee, #a855f7, #ec4899) 1; } .ds-timeline-dot { flex: none; width: 16px; height: 16px; margin-top: 14px; border-radius: 50%; background: #22d3ee; border: 4px solid #030712; } .ds-timeline-item { flex: 1; padding: 16px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); transition: border-color 0.2s ease; } .ds-timeline-item:hover { border-color: rgba(34,211,238,0.30); } .ds-timeline-city { margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; color: #ffffff; } .ds-timeline-date { margin: 4px 0 0; font-family: 'DM Sans', sans-serif; font-size: 14px; color: #9ca3af; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Midnight Venue",
+    "overview": "Groupie Tracker is a dim concert venue after the doors open and the house lights stay low. A visitor walks into a black chamber lit only by faint neon glow pools overhead, sees every act that plays here hanging on the walls, reads who is in the building tonight, and steps up to the one bright door that opens onto the floor. Every screen is a room in that venue: the landing is the entry hall with the acts on the wall, the artist grid is the floor where the acts are lined up, and the tour-dates page is the schedule board by the stage.\n\nThe system is image-first and chrome-last. Artist photography carries the emotional load; interface furniture is translucent glass with hairline borders that recede into the black. Density is loose and breathable — wide containers, generous vertical rhythm, single-column narratives. Color is spent almost entirely on three neon accents that behave like stage lights: they guide an action or mark live data, never purely decorate. There is no light source brighter than the text on the door; the interface only glows under the cursor.\n\nThe world is genuinely dark, not 'dark mode.' The base is near-black (#030712), surfaces are translucent glass, and the only full-opacity fills are the white door button, the white headline, and the artists' photographs. Hover is where the room wakes up: glass edges tint neon, card halos bloom, and images scale. Motion is authored one moment at a time — an entrance stagger here, a drifting wall there — never a running animation show.",
+    "keyCharacteristics": [
+      "A black chamber with faint neon glow pools; imagery carries the light.",
+      "Translucent glass surfaces with 1px hairlines; no resting shadows.",
+      "Three neon accents with strict jobs: cyan = the action, purple = secondary data, pink = tertiary hover.",
+      "Space Grotesk makes the statements; DM Sans is the quiet house font.",
+      "One authored motion moment per screen; reduced-motion is honored everywhere.",
+      "Square poster-frames for artist imagery; hover is where things glow."
+    ],
+    "rules": [
+      { "name": "The Neon Rarity Rule", "body": "Neon accents are attention, not decoration. Each accent has exactly one job — cyan signals the action, purple signals secondary live data, pink signals a tertiary hover — and they should never pile up on one screen. If a control needs more color than one accent, it's the wrong control.", "section": "colors" },
+      { "name": "The Glass Border Rule", "body": "Every surface is translucent glass over the black room, defined by a hairline border and what sits behind it. No surface is opaque, and no surface is borderless on a busy background.", "section": "colors" },
+      { "name": "The Grotesk Over the Glass Rule", "body": "Space Grotesk only ever carries a statement — headlines, card names, stat numerals, the door. DM Sans carries everything else. Never set a paragraph, a caption, or a meta line in Space Grotesk; never set a headline in DM Sans.", "section": "typography" },
+      { "name": "The Static Tracking Rule", "body": "Track numerals tightly (-0.03em) so stat numbers read as a single mass, uppercase labels wide (+0.04em), and body copy just open enough (+0.01em). Tracking is part of the voice; don't flatten it.", "section": "typography" },
+      { "name": "The No-Resting-Shadow Rule", "body": "No surface casts a shadow while idle. On hover or focus, a glow takes its place: cards bloom a cyan→purple→pink gradient halo (card-glow), artist images gain a cyan border and scale, the door's cyan border intensifies. If a surface needs to feel raised while nothing is touching it, it is missing its hairline or its glass fill.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep artist imagery in square poster-frames (aspect-square, object-cover) and let it carry the screen.",
+      "Do use Stage Cyan for exactly one action per screen; it means 'do this.'",
+      "Do set every statement in Space Grotesk and every paragraph in DM Sans.",
+      "Do build surfaces from translucent glass (white/5) plus a 1px hairline.",
+      "Do author one motion moment per screen and kill it under prefers-reduced-motion.",
+      "Do track stat numerals at -0.03em and uppercase labels at +0.04em.",
+      "Do keep the room black (#030712) and let the three glow pools and the imagery provide the light."
+    ],
+    "donts": [
+      "Don't use resting shadows to raise a surface; depth is borders, glass, and hover glow.",
+      "Don't stack two neon accents on one control — pick the cyan action or the quiet ghost, not both.",
+      "Don't set body copy in Space Grotesk or a headline in DM Sans.",
+      "Don't make a surface opaque unless it's the white door button or an artist photograph.",
+      "Don't add motion that plays unattended; no running carousels, no looping float on every screen, no entrance that repeats.",
+      "Don't crop artist imagery to a ratio other than square in cards, or brighten the wall so much that the landing stops reading as one dim room."
+    ]
+  }
+}

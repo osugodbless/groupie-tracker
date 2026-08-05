@@ -2,64 +2,12 @@
 <div id="artists-page">
     <!-- Hero -->
     <div class="relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-b from-neon-cyan/5 via-transparent to-transparent pointer-events-none"></div>
-        <div class="cassette cassette-hero" aria-hidden="true">
-            <div class="cassette-hero-spin">
-                <div class="cassette-body">
-                    <div class="cassette-reel cassette-reel-l">
-                        <div class="cassette-hub"></div>
-                    </div>
-                    <div class="cassette-tape">
-                        <div class="cassette-tape-stripe"></div>
-                    </div>
-                    <div class="cassette-reel cassette-reel-r">
-                        <div class="cassette-hub"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-12 sm:pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-8 pb-8 sm:pb-8">
             <div class="text-center max-w-3xl mx-auto">
                 <div class="hero-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 mb-8">
                     <span class="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-pulse"></span>
                     Browse the lineup
                 </div>
-                <h1 class="hero-title font-heading text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-balance">
-                    <span class="bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent">Your backstage pass to</span>
-                    <br>
-                    <span class="bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent">every artist</span>
-                </h1>
-                <p class="hero-desc mt-6 text-lg sm:text-xl text-gray-400 leading-relaxed tracking-wide measure-body mx-auto">
-                    Browse every artist in the library. See who's in the band, when they started, 
-                    and where they've played—from debut to latest tour.
-                </p>
-                <div class="hero-cta mt-10 flex items-center justify-center gap-4">
-                    <a href="#artists" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-gray-950 font-semibold hover:bg-gray-100 transition-colors">
-                        Explore Artists
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats bar -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-12">
-        <div class="grid grid-cols-2 gap-px rounded-2xl overflow-hidden bg-white/5">
-            <div class="bg-gray-950 py-5 sm:py-6 text-center">
-                <p class="font-heading text-3xl sm:text-4xl font-bold tracking-stat text-neon-cyan">{{ len . }}</p>
-                <p class="text-sm text-neon-cyan/70 mt-1">Artists</p>
-            </div>
-            {{ $totalLength := 0 }}
-            {{ range . }}
-            {{ $length := len .DatesLocation }}
-            {{ $totalLength = add $totalLength $length}}
-            {{ end }}
-            <div class="bg-gray-950 py-6 sm:py-8 text-center">
-                <p class="font-heading text-3xl sm:text-4xl font-bold tracking-stat text-neon-purple">{{ $totalLength }}</p>
-                <p class="text-sm text-neon-purple/70 mt-1">Concert Dates</p>
             </div>
         </div>
     </div>
