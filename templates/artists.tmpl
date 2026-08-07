@@ -1,4 +1,11 @@
 {{define "artists-page"}}
+<!--
+  THESIS: The filter board is a mixing console, not a stack of bare browser fields. The category default is a toolbar of unstyled controls; this surface refuses it and gathers all five filters into one translucent glass console above the grid, with the active query readable at a glance.
+  OWN-WORLD: #030712 chamber lit by the three neon glow pools; one glass console (white/5 fill, 1px hairlines, 16px radius), DM Sans labels and values, Space Grotesk numerals; the only bright elements are the cyan search focus, the cyan active hairlines, and the cyan chips.
+  STORY: A visitor steps onto the floor, dials the console - search, sort, first album, members, location - and watches the lineup redraw with every turn, reading exactly what is active from the chip rail below.
+  FIRST VIEWPORT: the glass console sits directly above the artist grid at container width; the search field owns the space, four selector tiles stand beside it, and an active-chip rail with clear-all appears only once a filter is set.
+  FORM: one glass control bar, dressed with live active states and clearable chips; the voice is the venue's own glass plus cyan.
+-->
 <div id="artists-page">
     <!-- Hero -->
     <div class="relative overflow-hidden">
@@ -12,11 +19,18 @@
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="filters">
-        {{template "filters:search" .}}
-        {{template "filters:sort" .}}
-        {{template "filters:firstalbum" .}}
+    <!-- Filter console -->
+    <div id="filter-board" class="filters max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+        <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+            <div class="flex flex-wrap items-end gap-x-4 gap-y-4 px-4 sm:px-5 py-4 sm:py-5">
+                {{template "filters:search" .}}
+                {{template "filters:sort" .}}
+                {{template "filters:firstalbum" .}}
+                {{template "filters:members" .}}
+                {{template "filters:concertLoc" .}}
+            </div>
+            <div id="active-filters" class="border-t border-white/5 px-4 sm:px-5 py-2.5 is-empty" aria-live="polite"></div>
+        </div>
     </div>
 
     <!-- Artist Grid -->
@@ -35,6 +49,179 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* ---- Filter console: one glass board above the grid ---- */
+    .filter-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+    }
+    .filter-label {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #9ca3af;
+        transition: color 0.25s ease;
+    }
+    .filter-input {
+        display: block;
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: rgba(17, 24, 39, 0.5);
+        color: #e5e7eb;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .filter-input::placeholder {
+        color: #94a3b8;
+    }
+    .filter-input:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+    }
+    .filter-input:focus {
+        outline: none;
+        border-color: rgba(34, 211, 238, 0.55);
+        background: rgba(17, 24, 39, 0.65);
+        box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15), 0 0 20px rgba(34, 211, 238, 0.08);
+    }
+    .filter-input:focus-visible {
+        outline: 2px solid rgba(34, 211, 238, 0.45);
+        outline-offset: 2px;
+    }
+    .filter-input[type="search"] {
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .filter-input::-webkit-search-cancel-button {
+        display: none;
+        -webkit-appearance: none;
+    }
+    .filter-input[type="date"],
+    .filter-input[type="number"],
+    .filter-select {
+        color-scheme: dark;
+    }
+    .filter-select {
+        -webkit-appearance: none;
+        appearance: none;
+        padding-right: 2.25rem;
+        cursor: pointer;
+    }
+    .filter-select option {
+        background-color: #111827;
+        color: #e5e7eb;
+    }
+    .filter-field .filter-icon {
+        color: #6b7280;
+        transition: color 0.25s ease;
+    }
+    .filter-field:focus-within .filter-icon {
+        color: #22d3ee;
+    }
+    .filter-field:focus-within .filter-label {
+        color: #22d3ee;
+    }
+
+    /* Active filter state */
+    .filter-field.filter-active .filter-label {
+        color: #22d3ee;
+    }
+    .filter-field.filter-active .filter-input {
+        border-color: rgba(34, 211, 238, 0.55);
+    }
+    .filter-field.filter-active .filter-icon {
+        color: #22d3ee;
+    }
+
+    /* ---- Active-filter chip rail ---- */
+    #active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+    #active-filters.is-empty {
+        display: none;
+    }
+    .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 8px 5px 10px;
+        border-radius: 9999px;
+        border: 1px solid rgba(34, 211, 238, 0.3);
+        background: rgba(34, 211, 238, 0.08);
+        color: #22d3ee;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        line-height: 1rem;
+        animation: chip-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .filter-chip:hover {
+        border-color: rgba(34, 211, 238, 0.6);
+        background: rgba(34, 211, 238, 0.12);
+    }
+    .filter-chip .chip-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 9999px;
+        background: #22d3ee;
+    }
+    .filter-chip button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 9999px;
+        color: #22d3ee;
+        background: rgba(34, 211, 238, 0.12);
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .filter-chip button:hover {
+        background: #22d3ee;
+        color: #030712;
+    }
+    .clear-all-btn {
+        margin-left: auto;
+        padding: 5px 8px;
+        border-radius: 8px;
+        color: #9ca3af;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        transition: color 0.2s ease;
+    }
+    .clear-all-btn:hover {
+        color: #ec4899;
+    }
+    @keyframes chip-in {
+        from {
+            opacity: 0;
+            transform: translateY(4px) scale(0.96);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .filter-chip {
+            animation: none;
+        }
+    }
+</style>
 {{end}}
 
 {{define "artists:grid"}}
@@ -81,66 +268,110 @@
             </svg>
         </div>
         <p class="text-gray-400 text-lg font-medium">No artists found</p>
-        <p class="text-gray-600 text-sm mt-1">No artist data to show yet.</p>
     </div>
     {{ end }}
 {{end}}
 
 {{define "filters:search"}}
-    <div id="search-filter">
-        <h3>
-            Search Artists
-            <span class="htmx-indicator">Searching...</span>
-        </h3>
-        <input class="form-control" type="search"
-            name="search" placeholder="Begin Typing To Search Artists..."
-            hx-get="/artists/findx"
-            hx-trigger="input changed delay:500ms, keyup[key=='Enter']"
-            hx-target="#filter-results"
-            hx-indicator=".htmx-indicator"
-            hx-push-url="true">
+    <div class="filter-field grow basis-72 min-w-[240px]" data-filter="search" id="search-filter">
+        <label for="filter-search-input" class="filter-label">Search</label>
+        <div class="relative">
+            <svg class="filter-icon pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"/>
+            </svg>
+            <input id="filter-search-input" class="filter-input pl-9" type="search"
+                name="search" placeholder="Search artists"
+                hx-get="/artists/findx"
+                hx-trigger="input changed delay:500ms, keyup[key=='Enter']"
+                hx-target="#filter-results"
+                hx-indicator=".htmx-indicator"
+                hx-push-url="true">
+            <span class="htmx-indicator absolute right-3 top-1/2 -translate-y-1/2" aria-hidden="true">
+                <svg class="animate-spin w-4 h-4 text-neon-cyan" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </span>
+        </div>
     </div>
 {{end}}
 
 {{define "filters:sort"}}
-    <div id="sort-filter">
-        <h3>Sort Artists</h3>
-        <select class="form-control"
-            name="sort"
-            hx-get="/artists/findx"
-            hx-trigger="change"
-            hx-target="#filter-results"
-            hx-push-url="true">
-            <option value="default">Default</option>
-            <option value="name-asc">Name (A-Z)</option>
-            <option value="name-desc">Name (Z-A)</option>
-            <option value="creation-asc">Founded (Oldest First)</option>
-            <option value="creation-desc">Founded (Newest First)</option>
-        </select>
+    <div class="filter-field w-40" data-filter="sort" id="sort-filter">
+        <label for="filter-sort" class="filter-label">Sort</label>
+        <div class="relative">
+            <select id="filter-sort" class="filter-input filter-select pr-9"
+                name="sort"
+                hx-get="/artists/findx"
+                hx-trigger="change"
+                hx-target="#filter-results"
+                hx-push-url="true">
+                <option value="default">Default</option>
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="creation-asc">Founded (oldest)</option>
+                <option value="creation-desc">Founded (newest)</option>
+            </select>
+            <svg class="filter-icon pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
     </div>
 {{end}}
 
 {{define "filters:firstalbum"}}
-    <form id="first-album-filter" 
-        hx-get="/artists/findx" 
-        hx-target="#filter-results" 
-        hx-trigger="change delay:500ms from:input"
-        hx-push-url="true"
-        class="flex gap-4 items-center"
-        onsubmit="return false;">
-
-        <h3>Filter by First Album</h3>
-  
-        <div>
-            <label for="from_date">From:</label>
-            <input type="date" id="from_date" name="from_date" value="1950-01-01">
-        </div>
-
-        <div>
-            <label for="to_date">To:</label>
-            <input type="date" id="to_date" name="to_date" value="2025-12-31">
-        </div>
-
-    </form>
+    <div class="filter-field w-80" data-filter="firstalbum" id="first-album-filter">
+        <label for="filter-from" class="filter-label">First album</label>
+        <form class="relative flex items-center gap-2"
+            hx-get="/artists/findx"
+            hx-target="#filter-results"
+            hx-trigger="change delay:300ms from:input"
+            hx-push-url="true"
+            onsubmit="return false;">
+            <input type="date" id="filter-from" name="from_date" value="1950-01-01" class="filter-input flex-1 min-w-0">
+            <span class="text-gray-500 text-xs shrink-0" aria-hidden="true">to</span>
+            <input type="date" id="filter-to" name="to_date" value="2025-12-31" class="filter-input flex-1 min-w-0" aria-label="To date">
+        </form>
+    </div>
 {{end}}
 
+{{define "filters:members"}}
+    <div class="filter-field w-28" data-filter="members" id="members-filter">
+        <label for="filter-members" class="filter-label">Members</label>
+        <form class="relative"
+            hx-get="/artists/findx"
+            hx-target="#filter-results"
+            hx-trigger="change delay:500ms from:input"
+            hx-push-url="true"
+            onsubmit="return false;">
+            <input id="filter-members" class="filter-input pl-9" type="number" name="members" min="1" placeholder="Any">
+            <svg class="filter-icon pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+        </form>
+    </div>
+{{end}}
+
+{{define "filters:concertLoc"}}
+    <div class="filter-field w-56" data-filter="loc" id="concert-loc-filter">
+        <label for="filter-loc" class="filter-label">Location</label>
+        <form class="relative"
+            hx-get="/artists/findx"
+            hx-trigger="change"
+            hx-target="#filter-results"
+            hx-push-url="true"
+            onsubmit="return false;">
+            <select id="filter-loc" class="filter-input filter-select pr-9" name="concert-loc">
+                <option value="">All locations</option>
+                {{ range . }}
+                {{ range $k, $v := .DatesLocation }}
+                <option value="{{ $k }}">{{ clean $k }}</option>
+                {{ end }}
+                {{ end }}
+            </select>
+            <svg class="filter-icon pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </form>
+    </div>
+{{end}}

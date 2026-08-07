@@ -153,6 +153,23 @@ func (app *Application) FilterArtists(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if filters.NumOfMembers != "" {
+		numOfMembers, err := strconv.Atoi(filters.NumOfMembers)
+		if err != nil {
+			http.Error(w, "Invalid number of members", http.StatusBadRequest)
+			return
+		}
+		matches := filterArtistsByNumOfMembers(numOfMembers)
+		renderTemplate(w, app, "artists:grid", matches)
+		return
+	}
+
+	if filters.ConcertLoc != "" {
+		matches := filterArtistsByConcertLocation(filters.ConcertLoc)
+		renderTemplate(w, app, "artists:grid", matches)
+		return
+	}
+
 	renderTemplate(w, app, "artists:grid", config.ArtistByID)
 }
 
@@ -218,6 +235,33 @@ func filterArtistsByFirstAlbum(fromDate, toDate string) map[int]config.Artist {
 			if artistFirstAlbum.Before(to) || artistFirstAlbum.Equal(to) {
 				matches[id] = artist
 			}
+		}
+	}
+
+	return matches
+}
+
+func filterArtistsByNumOfMembers(numOfMembers int) map[int]config.Artist {
+	matches := make(map[int]config.Artist)
+
+	for id, artist := range config.ArtistByID {
+		if len(artist.Members) == numOfMembers {
+			matches[id] = artist
+		}
+	}
+
+	return matches
+}
+
+func filterArtistsByConcertLocation(loc string) map[int]config.Artist {
+	rawLoc := strings.ToLower(loc)
+	rawLoc = strings.ReplaceAll(loc, ", ", "-")
+	rawLoc = strings.ReplaceAll(rawLoc, " ", "_")
+	matches := make(map[int]config.Artist)
+	for id, artist := range config.ArtistByID {
+		_, ok := artist.DatesLocation[rawLoc]
+		if ok {
+			matches[id] = artist
 		}
 	}
 

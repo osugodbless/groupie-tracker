@@ -35,6 +35,7 @@
             <div class="hero-cta mt-10 flex items-center justify-center gap-4">
                 <button hx-get="/artists"
                     hx-target="#content"
+                    hx-swap="innerHTML transition:true"
                     hx-push-url="true"
                     class="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-neon-cyan/10 border border-neon-cyan/40 text-neon-cyan font-heading font-semibold text-base sm:text-lg hover:bg-neon-cyan/20 hover:border-neon-cyan/70 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950">
                     <span class="hx-indicator hidden">
