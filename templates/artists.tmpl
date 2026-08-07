@@ -16,6 +16,7 @@
     <div class="filters">
         {{template "filters:search" .}}
         {{template "filters:sort" .}}
+        {{template "filters:firstalbum" .}}
     </div>
 
     <!-- Artist Grid -->
@@ -86,7 +87,7 @@
 {{end}}
 
 {{define "filters:search"}}
-    <div class="search-filter">
+    <div id="search-filter">
         <h3>
             Search Artists
             <span class="htmx-indicator">Searching...</span>
@@ -102,7 +103,7 @@
 {{end}}
 
 {{define "filters:sort"}}
-    <div class="sort-filter">
+    <div id="sort-filter">
         <h3>Sort Artists</h3>
         <select class="form-control"
             name="sort"
@@ -110,11 +111,36 @@
             hx-trigger="change"
             hx-target="#filter-results"
             hx-push-url="true">
-            <option value="">Default</option>
+            <option value="default">Default</option>
             <option value="name-asc">Name (A-Z)</option>
             <option value="name-desc">Name (Z-A)</option>
-            <option value="year-asc">Year (Oldest First)</option>
-            <option value="year-desc">Year (Newest First)</option>
+            <option value="creation-asc">Founded (Oldest First)</option>
+            <option value="creation-desc">Founded (Newest First)</option>
         </select>
     </div>
 {{end}}
+
+{{define "filters:firstalbum"}}
+    <form id="first-album-filter" 
+        hx-get="/artists/findx" 
+        hx-target="#filter-results" 
+        hx-trigger="change delay:500ms from:input"
+        hx-push-url="true"
+        class="flex gap-4 items-center"
+        onsubmit="return false;">
+
+        <h3>Filter by First Album</h3>
+  
+        <div>
+            <label for="from_date">From:</label>
+            <input type="date" id="from_date" name="from_date" value="1950-01-01">
+        </div>
+
+        <div>
+            <label for="to_date">To:</label>
+            <input type="date" id="to_date" name="to_date" value="2025-12-31">
+        </div>
+
+    </form>
+{{end}}
+

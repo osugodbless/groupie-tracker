@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/osugodbless/groupie-tracker/internal/config"
 )
@@ -21,8 +22,14 @@ type Application struct {
 type Filters struct {
 	Search       string
 	Sort         string
+	FirstAlbum   FirstAlbum
 	NumOfMembers string
 	ConcertLoc   string
+}
+
+type FirstAlbum struct {
+	from_date string
+	to_date   string
 }
 
 func renderTemplate(w http.ResponseWriter, app *Application, contentFile string, data any) {
@@ -110,8 +117,12 @@ func (app *Application) FilterArtists(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filters := Filters{
-		Search:       r.FormValue("search"),
-		Sort:         r.FormValue("sort"),
+		Search: r.FormValue("search"),
+		Sort:   r.FormValue("sort"),
+		FirstAlbum: FirstAlbum{
+			from_date: r.FormValue("from_date"),
+			to_date:   r.FormValue("to_date"),
+		},
 		NumOfMembers: r.FormValue("members"),
 		ConcertLoc:   r.FormValue("concert-loc"),
 	}
@@ -123,12 +134,22 @@ func (app *Application) FilterArtists(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if filters.Sort != "" {
+		if filters.Sort == "default" {
+			renderTemplate(w, app, "artists:grid", config.ArtistByID)
+			return
+		}
 		artistsToSort := make([]config.Artist, 0, len(config.ArtistByID))
 		for _, artist := range config.ArtistByID {
 			artistsToSort = append(artistsToSort, artist)
 		}
-		sortedArtists := sortArtists(artistsToSort, filters.Sort)
-		renderTemplate(w, app, "artists:grid", sortedArtists)
+		sortArtists(&artistsToSort, filters.Sort)
+		renderTemplate(w, app, "artists:grid", artistsToSort)
+		return
+	}
+
+	if filters.FirstAlbum.from_date != "" || filters.FirstAlbum.to_date != "" {
+		matches := filterArtistsByFirstAlbum(filters.FirstAlbum.from_date, filters.FirstAlbum.to_date)
+		renderTemplate(w, app, "artists:grid", matches)
 		return
 	}
 
@@ -146,40 +167,59 @@ func getArtistByID(id int) (config.Artist, error) {
 func searchArtistsByName(query string) map[int]config.Artist {
 	var matches map[int]config.Artist
 
-	if query == "" {
-		matches = config.ArtistByID
-	} else {
-		matches = make(map[int]config.Artist)
-		for id, artist := range config.ArtistByID {
-			if strings.Contains(strings.ToLower(artist.Name), strings.ToLower(query)) {
+	matches = make(map[int]config.Artist)
+	for id, artist := range config.ArtistByID {
+		if strings.Contains(strings.ToLower(artist.Name), strings.ToLower(query)) {
+			matches[id] = artist
+		}
+	}
+	return matches
+}
+
+func sortArtists(artists *[]config.Artist, sortBy string) {
+	sortBy = strings.ToLower(strings.TrimSpace(sortBy))
+	// Sort by sorting options
+	switch sortBy {
+	case "name-asc":
+		slices.SortFunc(*artists, func(a, b config.Artist) int {
+			return cmp.Compare(a.Name, b.Name)
+		})
+	case "name-desc":
+		slices.SortFunc(*artists, func(a, b config.Artist) int {
+			return cmp.Compare(b.Name, a.Name)
+		})
+	case "creation-asc":
+		slices.SortFunc(*artists, func(a, b config.Artist) int {
+			return cmp.Compare(a.CreationYear, b.CreationYear)
+		})
+	case "creation-desc":
+		slices.SortFunc(*artists, func(a, b config.Artist) int {
+			return cmp.Compare(b.CreationYear, a.CreationYear)
+		})
+	}
+}
+
+func filterArtistsByFirstAlbum(fromDate, toDate string) map[int]config.Artist {
+	from, err1 := time.Parse("2006-01-02", fromDate)
+	to, err2 := time.Parse("2006-01-02", toDate)
+
+	if err1 != nil || err2 != nil {
+		return nil
+	}
+
+	matches := make(map[int]config.Artist)
+
+	for id, artist := range config.ArtistByID {
+		artistFirstAlbum, err := time.Parse("02-01-2006", artist.FirstAlbum)
+		if err != nil {
+			continue
+		}
+		if artistFirstAlbum.After(from) || artistFirstAlbum.Equal(from) {
+			if artistFirstAlbum.Before(to) || artistFirstAlbum.Equal(to) {
 				matches[id] = artist
 			}
 		}
 	}
 
 	return matches
-}
-
-func sortArtists(artists []config.Artist, sortBy string) []config.Artist {
-	sortBy = strings.ToLower(strings.TrimSpace(sortBy))
-	switch sortBy {
-	case "name-asc":
-		slices.SortFunc(artists, func(a, b config.Artist) int {
-			return cmp.Compare(a.Name, b.Name)
-		})
-
-	case "name-desc":
-		slices.SortFunc(artists, func(a, b config.Artist) int {
-			return cmp.Compare(b.Name, a.Name)
-		})
-	case "members":
-		// Sorting logic for number of members can be implemented here
-	case "creationdate":
-		// Sorting logic for creation date can be implemented here
-	default:
-		log.Printf("Unknown sort option: %s", sortBy)
-	}
-
-	return artists
-
 }
