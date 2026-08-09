@@ -6,6 +6,7 @@ import (
 	"github.com/osugodbless/groupie-tracker/internal/handlers"
 )
 
+// Routes sets up the routes for the application and returns an http.Handler.
 func Routes(app *handlers.Application) http.Handler {
 	mux := http.NewServeMux()
 
