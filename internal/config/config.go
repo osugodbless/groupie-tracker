@@ -1,5 +1,6 @@
 package config
 
+// Artist represents a musical Band with their details and concert dates.
 type Artist struct {
 	ID            int                 `json:"id"`
 	Image         string              `json:"image"`
