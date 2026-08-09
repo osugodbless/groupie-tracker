@@ -28,7 +28,7 @@ func NewAPIClient(baseURL string, customClient *http.Client) *APIClient {
 
 // FetchArtistsAndRelations fetches data concurrently.
 func (api *APIClient) FetchArtistsAndRelations(ctx context.Context) (map[int]Artist, error) {
-	// Create a child context that can be canceled immediately if any goroutine fails
+	// A child context that can be canceled immediately if any goroutine fails
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
