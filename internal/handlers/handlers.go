@@ -5,265 +5,254 @@ import (
 	"cmp"
 	"errors"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/osugodbless/groupie-tracker/internal/config"
 )
 
-type Application struct {
-	Templates *template.Template
+// ArtistService defines the data access contract for easier mocking and testing.
+type ArtistService interface {
+	GetByID(id int) (config.Artist, error)
+	GetAll() map[int]config.Artist
+	Filter(filters Filters) map[int]config.Artist
+}
+
+// BandArtistService implements ArtistService safely with a read lock.
+type BandArtistService struct {
+	mu      sync.RWMutex
+	artists map[int]config.Artist
+}
+
+func NewBandArtistService(data map[int]config.Artist) *BandArtistService {
+	return &BandArtistService{
+		artists: data,
+	}
+}
+
+func (s *BandArtistService) GetByID(id int) (config.Artist, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	artist, ok := s.artists[id]
+	if !ok {
+		return config.Artist{}, errors.New("artist not found")
+	}
+	return artist, nil
+}
+
+func (s *BandArtistService) GetAll() map[int]config.Artist {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	cp := make(map[int]config.Artist, len(s.artists))
+	for k, v := range s.artists {
+		cp[k] = v
+	}
+	return cp
+}
+
+func (s *BandArtistService) Filter(f Filters) map[int]config.Artist {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	result := make(map[int]config.Artist)
+
+	var fromTime, toTime time.Time
+	var errFrom, errTo error
+	if f.FirstAlbum.FromDate != "" {
+		fromTime, errFrom = time.Parse("2006-01-02", f.FirstAlbum.FromDate)
+	}
+	if f.FirstAlbum.ToDate != "" {
+		toTime, errTo = time.Parse("2006-01-02", f.FirstAlbum.ToDate)
+	}
+
+	for id, artist := range s.artists {
+		// Search Query
+		if f.Search != "" && !strings.Contains(strings.ToLower(artist.Name), strings.ToLower(f.Search)) {
+			continue
+		}
+
+		// Number of Members
+		if f.NumOfMembers > 0 && len(artist.Members) != f.NumOfMembers {
+			continue
+		}
+
+		// Concert Location
+		if f.ConcertLoc != "" {
+			rawLoc := strings.ToLower(f.ConcertLoc)
+			rawLoc = strings.ReplaceAll(rawLoc, ", ", "-")
+			rawLoc = strings.ReplaceAll(rawLoc, " ", "_")
+			if _, ok := artist.DatesLocation[rawLoc]; !ok {
+				continue
+			}
+		}
+
+		// First Album Date Range
+		if errFrom == nil && !fromTime.IsZero() || errTo == nil && !toTime.IsZero() {
+			albumDate, err := time.Parse("02-01-2006", artist.FirstAlbum)
+			if err != nil {
+				continue
+			}
+			if !fromTime.IsZero() && albumDate.Before(fromTime) {
+				continue
+			}
+			if !toTime.IsZero() && albumDate.After(toTime) {
+				continue
+			}
+		}
+
+		result[id] = artist
+	}
+
+	return result
+}
+
+type FirstAlbum struct {
+	FromDate string
+	ToDate   string
 }
 
 type Filters struct {
 	Search       string
 	Sort         string
 	FirstAlbum   FirstAlbum
-	NumOfMembers string
+	NumOfMembers int
 	ConcertLoc   string
 }
 
-type FirstAlbum struct {
-	from_date string
-	to_date   string
+type Application struct {
+	Templates     *template.Template
+	Logger        *slog.Logger
+	ArtistService ArtistService
 }
 
-func renderTemplate(w http.ResponseWriter, app *Application, contentFile string, data any) {
+func NewApplication(tmpl *template.Template, logger *slog.Logger, service ArtistService) *Application {
+	return &Application{
+		Templates:     tmpl,
+		Logger:        logger,
+		ArtistService: service,
+	}
+}
+
+func (app *Application) renderTemplate(w http.ResponseWriter, status int, page string, data any) {
 	buf := new(bytes.Buffer)
-	err := app.Templates.ExecuteTemplate(buf, contentFile, data)
+	err := app.Templates.ExecuteTemplate(buf, page, data)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.Logger.Error("template rendering failed", "template", page, "error", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	buf.WriteTo(w)
+
+	w.WriteHeader(status)
+	if _, err := buf.WriteTo(w); err != nil {
+		app.Logger.Error("failed writing buffer to response writer", "error", err)
+	}
 }
 
+// HomeHandler handles GET /
 func (app *Application) HomeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	renderTemplate(w, app, "base.tmpl", config.ArtistByID)
+	app.renderTemplate(w, http.StatusOK, "base.tmpl", app.ArtistService.GetAll())
 }
 
+// ArtistsHandler handles GET /artists
 func (app *Application) ArtistsHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	renderTemplate(w, app, "artists-page", config.ArtistByID)
+	app.renderTemplate(w, http.StatusOK, "artists-page", app.ArtistService.GetAll())
 }
 
+// GetArtistHandler handles GET /artists/{id}
 func (app *Application) GetArtistHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id <= 0 {
+		http.Error(w, "Invalid artist ID", http.StatusBadRequest)
 		return
 	}
 
-	idStr := r.PathValue("id")
-
-	id, err := strconv.Atoi(idStr)
-
-	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
-		return
-	}
-
-	artist, err := getArtistByID(id)
-
+	artist, err := app.ArtistService.GetByID(id)
 	if err != nil {
 		http.Error(w, "Artist not found", http.StatusNotFound)
 		return
 	}
 
-	renderTemplate(w, app, "artistsDetails.tmpl", artist)
+	app.renderTemplate(w, http.StatusOK, "artistsDetails.tmpl", artist)
 }
 
+// TourDatesHandler handles GET /artists/{id}/tour-dates
 func (app *Application) TourDatesHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id <= 0 {
+		http.Error(w, "Invalid artist ID", http.StatusBadRequest)
 		return
 	}
 
-	idStr := r.PathValue("id")
-
-	id, err := strconv.Atoi(idStr)
-
-	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
-		return
-	}
-
-	artist, err := getArtistByID(id)
-
+	artist, err := app.ArtistService.GetByID(id)
 	if err != nil {
 		http.Error(w, "Artist not found", http.StatusNotFound)
 		return
 	}
 
-	renderTemplate(w, app, "tour-dates.tmpl", artist)
+	app.renderTemplate(w, http.StatusOK, "tour-dates.tmpl", artist)
 }
 
+// FilterArtists handles GET /artists/filter
 func (app *Application) FilterArtists(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
+	var members int
+	if m := r.FormValue("members"); m != "" {
+		parsed, err := strconv.Atoi(m)
+		if err != nil {
+			http.Error(w, "Invalid number of members", http.StatusBadRequest)
+			return
+		}
+		members = parsed
 	}
 
 	filters := Filters{
 		Search: r.FormValue("search"),
 		Sort:   r.FormValue("sort"),
 		FirstAlbum: FirstAlbum{
-			from_date: r.FormValue("from_date"),
-			to_date:   r.FormValue("to_date"),
+			FromDate: r.FormValue("from_date"),
+			ToDate:   r.FormValue("to_date"),
 		},
-		NumOfMembers: r.FormValue("members"),
+		NumOfMembers: members,
 		ConcertLoc:   r.FormValue("concert-loc"),
 	}
 
-	if filters.Search != "" {
-		matches := searchArtistsByName(filters.Search)
-		renderTemplate(w, app, "artists:grid", matches)
-		return
+	filteredMap := app.ArtistService.Filter(filters)
+
+	// Convert to slice for sorting
+	artists := make([]config.Artist, 0, len(filteredMap))
+	for _, artist := range filteredMap {
+		artists = append(artists, artist)
 	}
 
-	if filters.Sort != "" {
-		if filters.Sort == "default" {
-			renderTemplate(w, app, "artists:grid", config.ArtistByID)
-			return
-		}
-		artistsToSort := make([]config.Artist, 0, len(config.ArtistByID))
-		for _, artist := range config.ArtistByID {
-			artistsToSort = append(artistsToSort, artist)
-		}
-		sortArtists(&artistsToSort, filters.Sort)
-		renderTemplate(w, app, "artists:grid", artistsToSort)
-		return
-	}
+	sortArtists(artists, filters.Sort)
 
-	if filters.FirstAlbum.from_date != "" || filters.FirstAlbum.to_date != "" {
-		matches := filterArtistsByFirstAlbum(filters.FirstAlbum.from_date, filters.FirstAlbum.to_date)
-		renderTemplate(w, app, "artists:grid", matches)
-		return
-	}
-
-	if filters.NumOfMembers != "" {
-		numOfMembers, err := strconv.Atoi(filters.NumOfMembers)
-		if err != nil {
-			http.Error(w, "Invalid number of members", http.StatusBadRequest)
-			return
-		}
-		matches := filterArtistsByNumOfMembers(numOfMembers)
-		renderTemplate(w, app, "artists:grid", matches)
-		return
-	}
-
-	if filters.ConcertLoc != "" {
-		matches := filterArtistsByConcertLocation(filters.ConcertLoc)
-		renderTemplate(w, app, "artists:grid", matches)
-		return
-	}
-
-	renderTemplate(w, app, "artists:grid", config.ArtistByID)
+	app.renderTemplate(w, http.StatusOK, "artists:grid", artists)
 }
 
-func getArtistByID(id int) (config.Artist, error) {
-	artist, ok := config.ArtistByID[id]
-	if ok {
-		return artist, nil
-	}
-	return config.Artist{}, errors.New("Artist not found")
-}
-
-func searchArtistsByName(query string) map[int]config.Artist {
-	var matches map[int]config.Artist
-
-	matches = make(map[int]config.Artist)
-	for id, artist := range config.ArtistByID {
-		if strings.Contains(strings.ToLower(artist.Name), strings.ToLower(query)) {
-			matches[id] = artist
-		}
-	}
-	return matches
-}
-
-func sortArtists(artists *[]config.Artist, sortBy string) {
+func sortArtists(artists []config.Artist, sortBy string) {
 	sortBy = strings.ToLower(strings.TrimSpace(sortBy))
-	// Sort by sorting options
 	switch sortBy {
 	case "name-asc":
-		slices.SortFunc(*artists, func(a, b config.Artist) int {
+		slices.SortFunc(artists, func(a, b config.Artist) int {
 			return cmp.Compare(a.Name, b.Name)
 		})
 	case "name-desc":
-		slices.SortFunc(*artists, func(a, b config.Artist) int {
+		slices.SortFunc(artists, func(a, b config.Artist) int {
 			return cmp.Compare(b.Name, a.Name)
 		})
 	case "creation-asc":
-		slices.SortFunc(*artists, func(a, b config.Artist) int {
+		slices.SortFunc(artists, func(a, b config.Artist) int {
 			return cmp.Compare(a.CreationYear, b.CreationYear)
 		})
 	case "creation-desc":
-		slices.SortFunc(*artists, func(a, b config.Artist) int {
+		slices.SortFunc(artists, func(a, b config.Artist) int {
 			return cmp.Compare(b.CreationYear, a.CreationYear)
 		})
 	}
-}
-
-func filterArtistsByFirstAlbum(fromDate, toDate string) map[int]config.Artist {
-	from, err1 := time.Parse("2006-01-02", fromDate)
-	to, err2 := time.Parse("2006-01-02", toDate)
-
-	if err1 != nil || err2 != nil {
-		return nil
-	}
-
-	matches := make(map[int]config.Artist)
-
-	for id, artist := range config.ArtistByID {
-		artistFirstAlbum, err := time.Parse("02-01-2006", artist.FirstAlbum)
-		if err != nil {
-			continue
-		}
-		if artistFirstAlbum.After(from) || artistFirstAlbum.Equal(from) {
-			if artistFirstAlbum.Before(to) || artistFirstAlbum.Equal(to) {
-				matches[id] = artist
-			}
-		}
-	}
-
-	return matches
-}
-
-func filterArtistsByNumOfMembers(numOfMembers int) map[int]config.Artist {
-	matches := make(map[int]config.Artist)
-
-	for id, artist := range config.ArtistByID {
-		if len(artist.Members) == numOfMembers {
-			matches[id] = artist
-		}
-	}
-
-	return matches
-}
-
-func filterArtistsByConcertLocation(loc string) map[int]config.Artist {
-	rawLoc := strings.ToLower(loc)
-	rawLoc = strings.ReplaceAll(loc, ", ", "-")
-	rawLoc = strings.ReplaceAll(rawLoc, " ", "_")
-	matches := make(map[int]config.Artist)
-	for id, artist := range config.ArtistByID {
-		_, ok := artist.DatesLocation[rawLoc]
-		if ok {
-			matches[id] = artist
-		}
-	}
-
-	return matches
 }

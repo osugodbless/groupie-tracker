@@ -325,7 +325,7 @@
         <form class="relative flex items-center gap-2"
             hx-get="/artists/findx"
             hx-target="#filter-results"
-            hx-trigger="change delay:300ms from:input"
+            hx-trigger="change delay:300ms from:#filter-from, change delay:300ms from:#filter-to"
             hx-push-url="true"
             onsubmit="return false;">
             <input type="date" id="filter-from" name="from_date" value="1950-01-01" class="filter-input flex-1 min-w-0">
@@ -341,7 +341,7 @@
         <form class="relative"
             hx-get="/artists/findx"
             hx-target="#filter-results"
-            hx-trigger="change delay:500ms from:input"
+            hx-trigger="change delay:500ms from:#filter-members"
             hx-push-url="true"
             onsubmit="return false;">
             <input id="filter-members" class="filter-input pl-9" type="number" name="members" min="1" placeholder="Any">
