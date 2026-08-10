@@ -19,11 +19,11 @@ var (
 		Name:         "Mock Artist",
 		Members:      []string{"Alice", "Bob"},
 		CreationYear: 2020,
-		FirstAlbum:   "2021-01-01",
+		FirstAlbum:   "01-01-2021",
 		Image:        "https://example.com/img.jpg",
 		DatesLocation: map[string][]string{
-			"New_York":    {"2023-01-01", "2023-01-02"},
-			"Los_Angeles": {"2023-02-01"},
+			"new_york":    {"2023-01-01", "2023-01-02"},
+			"los_angeles": {"2023-02-01"},
 		},
 	}
 
@@ -32,10 +32,10 @@ var (
 		Name:         "Mock Artist Two",
 		Members:      []string{"Charlie"},
 		CreationYear: 2015,
-		FirstAlbum:   "2016-05-10",
+		FirstAlbum:   "10-05-2016",
 		Image:        "https://example.com/img2.jpg",
 		DatesLocation: map[string][]string{
-			"London": {"2023-03-01"},
+			"london": {"2023-03-01"},
 		},
 	}
 )
@@ -44,6 +44,7 @@ var testTemplate = `
 		{{define "base.tmpl"}}<div>Base Template</div>{{end}}
 		{{define "artistsDetails.tmpl"}}<div>Artist Details: {{.Name}}</div>{{end}}
 		{{define "tour-dates.tmpl"}}<div>Tour Dates: {{.Name}}</div>{{end}}
+		{{define "artists:grid"}}{{range .}}<div>{{.Name}}</div>{{end}}{{end}}
 	`
 
 func setup() *handlers.Application {
@@ -338,5 +339,95 @@ func TestHomeHandlerRenderTemplateError(t *testing.T) {
 
 	if w.Code != http.StatusInternalServerError {
 		t.Errorf("expected 500 for template execution error, got %d", w.Code)
+	}
+}
+
+func TestFilterArtists(t *testing.T) {
+	app := setup()
+
+	tests := []struct {
+		name     string
+		query    string
+		wantCode int
+		wantBody string
+	}{
+		{
+			name:     "search matches one artist",
+			query:    "search=Artist+Two",
+			wantCode: http.StatusOK,
+			wantBody: "<div>Mock Artist Two</div>",
+		},
+		{
+			name:     "search with no results renders empty grid",
+			query:    "search=zzz",
+			wantCode: http.StatusOK,
+			wantBody: "",
+		},
+		{
+			name:     "members filter exact count",
+			query:    "members=2",
+			wantCode: http.StatusOK,
+			wantBody: "<div>Mock Artist</div>",
+		},
+		{
+			name:     "first album from date excludes older artists",
+			query:    "from_date=2018-01-01",
+			wantCode: http.StatusOK,
+			wantBody: "<div>Mock Artist</div>",
+		},
+		{
+			name:     "first album to date excludes newer artists",
+			query:    "to_date=2017-12-31",
+			wantCode: http.StatusOK,
+			wantBody: "<div>Mock Artist Two</div>",
+		},
+		{
+			name:     "concert location filters by raw key",
+			query:    "concert-loc=new_york",
+			wantCode: http.StatusOK,
+			wantBody: "<div>Mock Artist</div>",
+		},
+		{
+			name:     "sort name asc orders results",
+			query:    "sort=name-asc",
+			wantCode: http.StatusOK,
+			wantBody: "<div>Mock Artist</div><div>Mock Artist Two</div>",
+		},
+		{
+			name:     "combined filters intersect",
+			query:    "search=Mock+Artist&members=1",
+			wantCode: http.StatusOK,
+			wantBody: "<div>Mock Artist Two</div>",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", "/artists/filter?"+tt.query, nil)
+			w := httptest.NewRecorder()
+
+			app.FilterArtists(w, r)
+
+			if w.Code != tt.wantCode {
+				t.Errorf("expected status %d, got %d", tt.wantCode, w.Code)
+			}
+
+			if body := w.Body.String(); body != tt.wantBody {
+				t.Errorf("expected body %q, got %q", tt.wantBody, body)
+			}
+		})
+	}
+}
+
+func TestFilterArtistsInvalidMembers(t *testing.T) {
+	app := setup()
+
+	r := httptest.NewRequest("GET", "/artists/filter?members=abc", nil)
+	w := httptest.NewRecorder()
+
+	app.FilterArtists(w, r)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400 for invalid members value, got %d", w.Code)
 	}
 }

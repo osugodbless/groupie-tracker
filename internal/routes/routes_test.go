@@ -59,7 +59,7 @@ func TestRoutes(t *testing.T) {
 	}{
 		{"Test Home Route", "GET", "/", "", http.StatusOK},
 		{"Test Artists Route", "GET", "/artists", "", http.StatusOK},
-		{"Test Search Artists Route", "GET", "/artists/findx?search=First", "", http.StatusOK},
+		{"Test Search Artists Route", "GET", "/artists/filter?search=First", "", http.StatusOK},
 		{"Test Artist Route", "GET", "/artists/1", "", http.StatusOK},
 		{"Test Tour Dates Route", "GET", "/artists/1/tour-data", "", http.StatusOK},
 		{"Test Non-existent Artist Route", "GET", "/artists/9999", "", http.StatusNotFound},
