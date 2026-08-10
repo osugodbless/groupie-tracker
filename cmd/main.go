@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osugodbless/groupie-tracker/assets"
 	"github.com/osugodbless/groupie-tracker/internal/client"
 	"github.com/osugodbless/groupie-tracker/internal/handlers"
 	"github.com/osugodbless/groupie-tracker/internal/routes"
@@ -30,9 +31,9 @@ var funcMap = template.FuncMap{
 	},
 }
 
-var baseTmpl = template.Must(template.New("base").Funcs(funcMap).ParseFiles("templates/base.tmpl", "templates/index.tmpl", "templates/artistsDetails.tmpl", "templates/tour-dates.tmpl", "templates/artists.tmpl"))
-
 func main() {
+	var baseTmpl = template.Must(template.New("base").Funcs(funcMap).ParseFS(assets.HTMLFS, "base.tmpl", "index.tmpl", "artistsDetails.tmpl", "tour-dates.tmpl", "artists.tmpl"))
+
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	c := &http.Client{
 		Transport: transport,
