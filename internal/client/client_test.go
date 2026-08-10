@@ -1,13 +1,14 @@
-package config_test
+package client_test
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/osugodbless/groupie-tracker/internal/config"
+	"github.com/osugodbless/groupie-tracker/internal/client"
 )
 
 type RoundTripperFunc func(req *http.Request) *http.Response
@@ -21,8 +22,8 @@ func NewTestClient(fn RoundTripperFunc) *http.Client {
 		Transport: fn,
 	}
 }
-func TestLoadConfig(t *testing.T) {
-	client := NewTestClient(func(req *http.Request) *http.Response {
+func TestFetchArtistsAndRelations(t *testing.T) {
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
 		switch req.URL.String() {
 		case "https://example.com/api/artists":
 			return &http.Response{
@@ -45,18 +46,21 @@ func TestLoadConfig(t *testing.T) {
 		}
 	})
 
-	apiClient := &config.APIClient{
-		Client:  client,
-		BaseURL: "https://example.com/api",
+	apiClient := client.NewAPIClient("https://example.com/api", testClient)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	artists, err := apiClient.FetchArtistsAndRelations(ctx)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
 	}
 
-	apiClient.LoadConfig()
-
-	if len(config.ArtistByID) == 0 {
+	if len(artists) == 0 {
 		t.Errorf("Expected artists to be populated, but the map was empty")
 	}
 
-	for id, artist := range config.ArtistByID {
+	for id, artist := range artists {
 		if id != 1 {
 			t.Errorf("Expected artist ID 1, got %d", id)
 		}
@@ -67,16 +71,13 @@ func TestLoadConfig(t *testing.T) {
 
 }
 
-func TestAPIClient(t *testing.T) {
-	client := &config.APIClient{
-		Client:  &http.Client{Timeout: 10 * time.Second},
-		BaseURL: "https://example.com/api",
-	}
+func TestNewAPIClient(t *testing.T) {
+	c := client.NewAPIClient("https://example.com/api", &http.Client{Timeout: 10 * time.Second})
 
-	if client.BaseURL != "https://example.com/api" {
-		t.Errorf("Expected BaseURL to be 'https://example.com/api', got '%s'", client.BaseURL)
+	if c.BaseURL != "https://example.com/api" {
+		t.Errorf("Expected BaseURL to be 'https://example.com/api', got '%s'", c.BaseURL)
 	}
-	if client.Client.Timeout != 10*time.Second {
-		t.Errorf("Expected Client timeout to be 10 seconds, got %v", client.Client.Timeout)
+	if c.Client.Timeout != 10*time.Second {
+		t.Errorf("Expected Client timeout to be 10 seconds, got %v", c.Client.Timeout)
 	}
 }

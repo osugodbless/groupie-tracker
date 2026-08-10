@@ -1,4 +1,4 @@
-package config
+package client
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 )
 
 type APIClient struct {
-	client  *http.Client
-	baseURL string
+	Client  *http.Client
+	BaseURL string
 }
 
 func NewAPIClient(baseURL string, customClient *http.Client) *APIClient {
@@ -21,8 +21,8 @@ func NewAPIClient(baseURL string, customClient *http.Client) *APIClient {
 		}
 	}
 	return &APIClient{
-		client:  customClient,
-		baseURL: baseURL,
+		Client:  customClient,
+		BaseURL: baseURL,
 	}
 }
 
@@ -63,11 +63,11 @@ func (api *APIClient) FetchArtistsAndRelations(ctx context.Context) (map[int]Art
 	wg.Add(2)
 
 	go runTask(func() error {
-		return api.fetchJSON(ctx, api.baseURL+"/artists", &artists)
+		return api.fetchJSON(ctx, api.BaseURL+"/artists", &artists)
 	})
 
 	go runTask(func() error {
-		return api.fetchJSON(ctx, api.baseURL+"/relation", &relations)
+		return api.fetchJSON(ctx, api.BaseURL+"/relation", &relations)
 	})
 
 	// Wait for all goroutines to terminate
@@ -100,7 +100,7 @@ func (api *APIClient) fetchJSON(ctx context.Context, endpointURL string, target 
 		return fmt.Errorf("failed to create request for %s: %w", endpointURL, err)
 	}
 
-	resp, err := api.client.Do(req)
+	resp, err := api.Client.Do(req)
 	if err != nil {
 		return fmt.Errorf("HTTP request failed for %s: %w", endpointURL, err)
 	}

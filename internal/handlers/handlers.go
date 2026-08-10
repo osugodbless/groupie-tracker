@@ -13,55 +13,55 @@ import (
 	"sync"
 	"time"
 
-	"github.com/osugodbless/groupie-tracker/internal/config"
+	"github.com/osugodbless/groupie-tracker/internal/client"
 )
 
 // ArtistService defines the data access contract for easier mocking and testing.
 type ArtistService interface {
-	GetByID(id int) (config.Artist, error)
-	GetAll() map[int]config.Artist
-	Filter(filters Filters) map[int]config.Artist
+	GetByID(id int) (client.Artist, error)
+	GetAll() map[int]client.Artist
+	Filter(filters Filters) map[int]client.Artist
 }
 
 // BandArtistService implements ArtistService safely with a read lock.
 type BandArtistService struct {
 	mu      sync.RWMutex
-	artists map[int]config.Artist
+	artists map[int]client.Artist
 }
 
-func NewBandArtistService(data map[int]config.Artist) *BandArtistService {
+func NewBandArtistService(data map[int]client.Artist) *BandArtistService {
 	return &BandArtistService{
 		artists: data,
 	}
 }
 
-func (s *BandArtistService) GetByID(id int) (config.Artist, error) {
+func (s *BandArtistService) GetByID(id int) (client.Artist, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	artist, ok := s.artists[id]
 	if !ok {
-		return config.Artist{}, errors.New("artist not found")
+		return client.Artist{}, errors.New("artist not found")
 	}
 	return artist, nil
 }
 
-func (s *BandArtistService) GetAll() map[int]config.Artist {
+func (s *BandArtistService) GetAll() map[int]client.Artist {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	cp := make(map[int]config.Artist, len(s.artists))
+	cp := make(map[int]client.Artist, len(s.artists))
 	for k, v := range s.artists {
 		cp[k] = v
 	}
 	return cp
 }
 
-func (s *BandArtistService) Filter(f Filters) map[int]config.Artist {
+func (s *BandArtistService) Filter(f Filters) map[int]client.Artist {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	result := make(map[int]config.Artist)
+	result := make(map[int]client.Artist)
 
 	var fromTime, toTime time.Time
 	var errFrom, errTo error
@@ -225,7 +225,7 @@ func (app *Application) FilterArtists(w http.ResponseWriter, r *http.Request) {
 	filteredMap := app.ArtistService.Filter(filters)
 
 	// Convert to slice for sorting
-	artists := make([]config.Artist, 0, len(filteredMap))
+	artists := make([]client.Artist, 0, len(filteredMap))
 	for _, artist := range filteredMap {
 		artists = append(artists, artist)
 	}
@@ -235,23 +235,23 @@ func (app *Application) FilterArtists(w http.ResponseWriter, r *http.Request) {
 	app.renderTemplate(w, http.StatusOK, "artists:grid", artists)
 }
 
-func sortArtists(artists []config.Artist, sortBy string) {
+func sortArtists(artists []client.Artist, sortBy string) {
 	sortBy = strings.ToLower(strings.TrimSpace(sortBy))
 	switch sortBy {
 	case "name-asc":
-		slices.SortFunc(artists, func(a, b config.Artist) int {
+		slices.SortFunc(artists, func(a, b client.Artist) int {
 			return cmp.Compare(a.Name, b.Name)
 		})
 	case "name-desc":
-		slices.SortFunc(artists, func(a, b config.Artist) int {
+		slices.SortFunc(artists, func(a, b client.Artist) int {
 			return cmp.Compare(b.Name, a.Name)
 		})
 	case "creation-asc":
-		slices.SortFunc(artists, func(a, b config.Artist) int {
+		slices.SortFunc(artists, func(a, b client.Artist) int {
 			return cmp.Compare(a.CreationYear, b.CreationYear)
 		})
 	case "creation-desc":
-		slices.SortFunc(artists, func(a, b config.Artist) int {
+		slices.SortFunc(artists, func(a, b client.Artist) int {
 			return cmp.Compare(b.CreationYear, a.CreationYear)
 		})
 	}

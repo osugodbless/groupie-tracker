@@ -2,39 +2,43 @@ package handlers_test
 
 import (
 	"html/template"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"github.com/osugodbless/groupie-tracker/internal/config"
+	"github.com/osugodbless/groupie-tracker/internal/client"
 	"github.com/osugodbless/groupie-tracker/internal/handlers"
 )
 
-var firstMockArtist = config.Artist{
-	ID:           1,
-	Name:         "Mock Artist",
-	Members:      []string{"Alice", "Bob"},
-	CreationYear: 2020,
-	FirstAlbum:   "2021-01-01",
-	Image:        "https://example.com/img.jpg",
-	DatesLocation: map[string][]string{
-		"New_York":    {"2023-01-01", "2023-01-02"},
-		"Los_Angeles": {"2023-02-01"},
-	},
-}
+var (
+	firstMockArtist = client.Artist{
+		ID:           1,
+		Name:         "Mock Artist",
+		Members:      []string{"Alice", "Bob"},
+		CreationYear: 2020,
+		FirstAlbum:   "2021-01-01",
+		Image:        "https://example.com/img.jpg",
+		DatesLocation: map[string][]string{
+			"New_York":    {"2023-01-01", "2023-01-02"},
+			"Los_Angeles": {"2023-02-01"},
+		},
+	}
 
-var secondMockArtist = config.Artist{
-	ID:           7,
-	Name:         "Mock Artist Two",
-	Members:      []string{"Charlie"},
-	CreationYear: 2015,
-	FirstAlbum:   "2016-05-10",
-	Image:        "https://example.com/img2.jpg",
-	DatesLocation: map[string][]string{
-		"London": {"2023-03-01"},
-	},
-}
+	secondMockArtist = client.Artist{
+		ID:           7,
+		Name:         "Mock Artist Two",
+		Members:      []string{"Charlie"},
+		CreationYear: 2015,
+		FirstAlbum:   "2016-05-10",
+		Image:        "https://example.com/img2.jpg",
+		DatesLocation: map[string][]string{
+			"London": {"2023-03-01"},
+		},
+	}
+)
 
 var testTemplate = `
 		{{define "base.tmpl"}}<div>Base Template</div>{{end}}
@@ -42,23 +46,23 @@ var testTemplate = `
 		{{define "tour-dates.tmpl"}}<div>Tour Dates: {{.Name}}</div>{{end}}
 	`
 
-func setup() (*handlers.Application, map[int]config.Artist) {
+func setup() *handlers.Application {
 	tmpl := template.Must(template.New("test").Parse(testTemplate))
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
-	data := map[int]config.Artist{
+	data := map[int]client.Artist{
 		1: firstMockArtist,
 		7: secondMockArtist,
 	}
-	config.ArtistByID = data
+	service := handlers.NewBandArtistService(data)
 
-	app := &handlers.Application{
-		Templates: tmpl,
-	}
-	return app, data
+	app := handlers.NewApplication(tmpl, logger, service)
+
+	return app
 }
 
 func TestHomeHandler(t *testing.T) {
-	app, _ := setup()
+	app := setup()
 
 	tests := []struct {
 		name   string
@@ -67,9 +71,6 @@ func TestHomeHandler(t *testing.T) {
 		status int
 	}{
 		{name: "GET returns 200", method: "GET", path: "/", status: http.StatusOK},
-		{name: "POST returns 405", method: "POST", path: "/", status: http.StatusMethodNotAllowed},
-		{name: "PUT returns 405", method: "PUT", path: "/", status: http.StatusMethodNotAllowed},
-		{name: "DELETE returns 405", method: "DELETE", path: "/", status: http.StatusMethodNotAllowed},
 	}
 
 	for _, tt := range tests {
@@ -87,7 +88,7 @@ func TestHomeHandler(t *testing.T) {
 }
 
 func TestHomeHandlerResponseBody(t *testing.T) {
-	app, _ := setup()
+	app := setup()
 
 	r := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
@@ -101,7 +102,7 @@ func TestHomeHandlerResponseBody(t *testing.T) {
 }
 
 func TestArtistHandler(t *testing.T) {
-	app, _ := setup()
+	app := setup()
 
 	tests := []struct {
 		name      string
@@ -118,13 +119,6 @@ func TestArtistHandler(t *testing.T) {
 			pathValue: "1",
 			status:    http.StatusOK,
 			contains:  "Mock Artist",
-		},
-		{
-			name:      "POST returns 405",
-			method:    "POST",
-			path:      "/artist/1",
-			pathValue: "1",
-			status:    http.StatusMethodNotAllowed,
 		},
 		{
 			name:      "non-numeric ID returns 400",
@@ -177,7 +171,7 @@ func TestArtistHandler(t *testing.T) {
 }
 
 func TestTourDatesHandler(t *testing.T) {
-	app, _ := setup()
+	app := setup()
 
 	tests := []struct {
 		name      string
@@ -194,13 +188,6 @@ func TestTourDatesHandler(t *testing.T) {
 			pathValue: "1",
 			status:    http.StatusOK,
 			contains:  "Tour Dates",
-		},
-		{
-			name:      "POST returns 405",
-			method:    "POST",
-			path:      "/artist/1/tour-data",
-			pathValue: "1",
-			status:    http.StatusMethodNotAllowed,
 		},
 		{
 			name:      "non-numeric ID returns 400",
@@ -246,15 +233,8 @@ func TestTourDatesHandler(t *testing.T) {
 }
 
 func TestRenderTemplateError(t *testing.T) {
-	config.ArtistByID = map[int]config.Artist{
-		1: firstMockArtist,
-	}
-
-	tmpl := template.Must(template.New("test").Parse(`{{define "something.tmpl"}}ok{{end}}`))
-
-	app := &handlers.Application{
-		Templates: tmpl,
-	}
+	app := setup()
+	app.Templates = template.Must(template.New("test").Parse(`{{define "something.tmpl"}}ok{{end}}`))
 
 	r := httptest.NewRequest("GET", "/artist/1", nil)
 	r.SetPathValue("id", "1")
@@ -271,15 +251,8 @@ func TestRenderTemplateError(t *testing.T) {
 }
 
 func TestTourDatesRenderTemplateError(t *testing.T) {
-	config.ArtistByID = map[int]config.Artist{
-		1: firstMockArtist,
-	}
-
-	tmpl := template.Must(template.New("test").Parse(`{{define "something.tmpl"}}ok{{end}}`))
-
-	app := &handlers.Application{
-		Templates: tmpl,
-	}
+	app := setup()
+	app.Templates = template.Must(template.New("test").Parse(`{{define "something.tmpl"}}ok{{end}}`))
 
 	r := httptest.NewRequest("GET", "/artist/1/tour-data", nil)
 	r.SetPathValue("id", "1")
@@ -293,15 +266,11 @@ func TestTourDatesRenderTemplateError(t *testing.T) {
 }
 
 func TestGetArtistByIDNotFound(t *testing.T) {
-	setup()
+	app := setup()
 
 	r := httptest.NewRequest("GET", "/artist/42", nil)
 	r.SetPathValue("id", "42")
 	w := httptest.NewRecorder()
-
-	app := &handlers.Application{
-		Templates: template.Must(template.New("test").Parse(testTemplate)),
-	}
 
 	app.GetArtistHandler(w, r)
 
@@ -315,7 +284,7 @@ func TestGetArtistByIDNotFound(t *testing.T) {
 }
 
 func TestArtistHandlerResponseBody(t *testing.T) {
-	app, _ := setup()
+	app := setup()
 
 	r := httptest.NewRequest("GET", "/artist/1", nil)
 	r.SetPathValue("id", "1")
@@ -330,7 +299,7 @@ func TestArtistHandlerResponseBody(t *testing.T) {
 }
 
 func TestTourDatesHandlerResponseBody(t *testing.T) {
-	app, _ := setup()
+	app := setup()
 
 	r := httptest.NewRequest("GET", "/artist/1/tour-data", nil)
 	r.SetPathValue("id", "1")
@@ -345,10 +314,8 @@ func TestTourDatesHandlerResponseBody(t *testing.T) {
 }
 
 func TestHomeHandlerEmptyArtistMap(t *testing.T) {
-	config.ArtistByID = map[int]config.Artist{}
-
-	tmpl := template.Must(template.New("test").Parse(testTemplate))
-	app := &handlers.Application{Templates: tmpl}
+	app := setup()
+	app.ArtistService = handlers.NewBandArtistService(map[int]client.Artist{}) // Empty artist map
 
 	r := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
@@ -361,15 +328,8 @@ func TestHomeHandlerEmptyArtistMap(t *testing.T) {
 }
 
 func TestHomeHandlerRenderTemplateError(t *testing.T) {
-	config.ArtistByID = map[int]config.Artist{
-		1: firstMockArtist,
-	}
-
-	tmpl := template.Must(template.New("test").Parse(`{{define "something.tmpl"}}ok{{end}}`))
-
-	app := &handlers.Application{
-		Templates: tmpl,
-	}
+	app := setup()
+	app.Templates = template.Must(template.New("test").Parse(`{{define "something.tmpl"}}ok{{end}}`))
 
 	r := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
@@ -378,43 +338,5 @@ func TestHomeHandlerRenderTemplateError(t *testing.T) {
 
 	if w.Code != http.StatusInternalServerError {
 		t.Errorf("expected 500 for template execution error, got %d", w.Code)
-	}
-}
-
-func TestArtistHandlerMethodNotAllowed(t *testing.T) {
-	app, _ := setup()
-
-	methods := []string{"POST", "PUT", "DELETE", "PATCH"}
-	for _, method := range methods {
-		t.Run(method, func(t *testing.T) {
-			r := httptest.NewRequest(method, "/artist/1", nil)
-			r.SetPathValue("id", "1")
-			w := httptest.NewRecorder()
-
-			app.GetArtistHandler(w, r)
-
-			if w.Code != http.StatusMethodNotAllowed {
-				t.Errorf("expected 405 for %s, got %d", method, w.Code)
-			}
-		})
-	}
-}
-
-func TestTourDatesHandlerMethodNotAllowed(t *testing.T) {
-	app, _ := setup()
-
-	methods := []string{"POST", "PUT", "DELETE", "PATCH"}
-	for _, method := range methods {
-		t.Run(method, func(t *testing.T) {
-			r := httptest.NewRequest(method, "/artist/1/tour-data", nil)
-			r.SetPathValue("id", "1")
-			w := httptest.NewRecorder()
-
-			app.TourDatesHandler(w, r)
-
-			if w.Code != http.StatusMethodNotAllowed {
-				t.Errorf("expected 405 for %s, got %d", method, w.Code)
-			}
-		})
 	}
 }

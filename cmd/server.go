@@ -1,14 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"html/template"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/osugodbless/groupie-tracker/internal/config"
+	"github.com/osugodbless/groupie-tracker/internal/client"
 	"github.com/osugodbless/groupie-tracker/internal/handlers"
 	"github.com/osugodbless/groupie-tracker/internal/routes"
 )
@@ -31,20 +33,31 @@ var funcMap = template.FuncMap{
 var baseTmpl = template.Must(template.New("base").Funcs(funcMap).ParseFiles("templates/base.tmpl", "templates/index.tmpl", "templates/artistsDetails.tmpl", "templates/tour-dates.tmpl", "templates/artists.tmpl"))
 
 func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	c := &http.Client{
+		Transport: transport,
+		Timeout:   15 * time.Second, // Overall timeout for the entire request
+	}
+	client := client.NewAPIClient("https://groupietrackers.herokuapp.com/api", c)
 
-	app := &handlers.Application{
-		Templates: baseTmpl,
+	// Create a context with a timeout to ensure the entire operation doesn't exceed a certain duration
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	logger.Info("Loading band data from external API...")
+
+	// Fetch artists and relations concurrently
+	artists, err := client.FetchArtistsAndRelations(ctx)
+	if err != nil {
+		logger.Error("Failed to load band data", "error", err)
+		os.Exit(1)
 	}
 
-	apiClient := &config.APIClient{
-		Client: &http.Client{
-			Transport: transport,
-			Timeout:   15 * time.Second, // Still advisable to set an overall timeout
-		},
-		BaseURL: "https://groupietrackers.herokuapp.com/api",
-	}
+	logger.Info("Successfully loaded band data", "count", len(artists))
 
-	apiClient.LoadConfig()
+	// Initialize the BandArtistService with the loaded artists
+	service := handlers.NewBandArtistService(artists)
+	app := handlers.NewApplication(baseTmpl, logger, service)
 
 	mux := routes.Routes(app)
 
@@ -55,6 +68,6 @@ func main() {
 		Handler:      mux,
 	}
 
-	fmt.Printf("Server started on %v", server.Addr)
+	logger.Info("Server started", "Address", server.Addr)
 	log.Fatal(server.ListenAndServe())
 }
